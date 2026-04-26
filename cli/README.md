@@ -5,14 +5,11 @@ CLI tool for [Ralph](https://github.com/snarktank/ralph) — an autonomous plann
 ## Install
 
 ```bash
-git clone https://github.com/samchung95/ralph-cli.git
-cd ralph-cli/cli
-npm install
-npm run build
-npm install -g .
+npm install -g ralph-cli
+ralph --version
 ```
 
-The `ralph-cli` package name on npm is currently a placeholder and does not expose the `ralph` command. Until this CLI is published, install from the local package.
+This installs the `ralph` command globally. Ralph needs Node.js 18 or newer and one supported AI coding tool installed separately: Claude Code, Amp, GitHub Copilot CLI, or ChatGPT Codex.
 
 ## Quick Start
 
@@ -191,6 +188,7 @@ npm install
 npm run build      # Build with tsup
 npm run dev        # Build in watch mode
 npm run typecheck  # Type check only
+npm run pack:dry-run # Preview npm package contents
 npm run token-count # Count Ralph prompt/template tokens
 npm install -g .   # Update the globally installed ralph command from this checkout
 ```
@@ -203,3 +201,23 @@ npm run token-count -- --encoding cl100k_base --json
 ```
 
 The report separates one composed runtime prompt per phase from the total size of all templates, because Ralph only injects one phase prompt at a time.
+
+## Published Package Contents
+
+The npm package is intentionally small. `package.json` uses a `files` allowlist so the tarball contains only:
+
+- `dist/index.js`
+- `templates/**`
+- `README.md`
+- `LICENSE`
+- `package.json`
+
+Source files, development scripts, `node_modules`, local Ralph run state, archives, and visualization assets are excluded from the published package.
+
+Before publishing:
+
+```bash
+npm run typecheck
+npm run pack:dry-run
+npm publish
+```

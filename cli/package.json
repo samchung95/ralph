@@ -1,10 +1,10 @@
 {
   "name": "ralph-cli",
   "version": "0.1.0",
-  "description": "CLI tool for Ralph - an autonomous planner-routed AI agent loop that runs focused handoffs until final success criteria pass",
+  "description": "Run Ralph planner-routed AI coding-agent loops until final success criteria pass",
   "type": "module",
   "bin": {
-    "ralph": "./dist/index.js"
+    "ralph": "dist/index.js"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --clean",
@@ -12,9 +12,12 @@
     "token-count": "node scripts/count-context-tokens.mjs",
     "tokens": "node scripts/count-context-tokens.mjs",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "pack:dry-run": "npm pack --dry-run",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run typecheck && npm run build"
   },
   "files": [
+    "LICENSE",
     "dist",
     "templates"
   ],
@@ -30,8 +33,20 @@
     "prd",
     "coding-agent"
   ],
-  "author": "",
+  "author": "snarktank",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samchung95/ralph-cli.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/samchung95/ralph-cli/issues"
+  },
+  "homepage": "https://github.com/samchung95/ralph-cli#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "chalk": "^5.4.1",
     "commander": "^13.1.0"

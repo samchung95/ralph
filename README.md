@@ -22,17 +22,14 @@ Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
 ### Recommended: Node CLI
 
-Install Ralph globally from this repo:
+Install Ralph globally from npm:
 
 ```bash
-git clone https://github.com/samchung95/ralph-cli.git
-cd ralph-cli/cli
-npm install
-npm run build
-npm install -g .
+npm install -g ralph-cli
+ralph --version
 ```
 
-The `ralph-cli` package name on npm is currently a placeholder and does not expose the `ralph` command. Until this CLI is published, install from the local `cli` package.
+This installs the `ralph` command. Ralph requires Node.js 18 or newer plus one supported AI coding tool installed separately.
 
 Initialize Ralph in your project:
 
@@ -243,8 +240,17 @@ To update your global `ralph` command after changing this checkout, run:
 
 ```bash
 cd /path/to/ralph-cli/cli
+npm install
 npm run build
 npm install -g .
+```
+
+To preview the npm package before publishing:
+
+```bash
+cd /path/to/ralph-cli/cli
+npm run typecheck
+npm run pack:dry-run
 ```
 
 ## Key Files

@@ -1,68 +1,48 @@
 {
-  "project": "Ralph CLI",
-  "branchName": "ralph/transient-runtime-prompts",
-  "description": "Transient Runtime Prompts and Safe Artifact Cleanup - evolving PRD slice",
+  "project": "MyApp",
+  "branchName": "ralph/task-priority",
+  "description": "Task Priority System - first evolving PRD slice",
   "finalSuccessCriteria": {
-    "description": "Ralph no longer leaves setup/runtime artifacts in target repositories: init avoids installing Ralph prompt/example artifacts, run and fix load prompts from the installed Ralph dependency, runtime prompt files are cleaned up or restored, and fix can safely remove stale Ralph-generated root artifacts only when their contents exactly match known current or previous Ralph-generated versions.",
+    "description": "Users can assign, view, edit, and filter task priority across the app, with priority persisted between sessions.",
     "acceptanceCriteria": [
-      "ralph init no longer copies DEVELOPER.md, PLANNER.md, DOCTOR.md, or prd.json.example into the target project by default",
-      "ralph run loads DEVELOPER.md and PLANNER.md from the Ralph package templates instead of requiring those files in the target project",
-      "ralph fix loads DOCTOR.md from the Ralph package templates instead of requiring that file in the target project",
-      "The active validation issue(s) are still injected into the doctor prompt before the single fix pass runs",
-      "Generated runtime prompt files such as prompt.md, CLAUDE.md, and AGENTS.md are removed after run/fix when Ralph created them",
-      "If a runtime prompt file already existed before run/fix, Ralph restores its previous contents instead of deleting or overwriting it permanently",
-      "ralph fix detects stale root Ralph artifacts including DEVELOPER.md, PLANNER.md, DOCTOR.md, prd.json.example, prompt.md, CLAUDE.md, and AGENTS.md",
-      "ralph fix removes a stale root artifact only when its full normalized content exactly matches a known current or previous Ralph-generated version for that artifact",
-      "ralph fix preserves and reports any candidate artifact whose content does not exactly match a known Ralph-generated version",
-      "Errors during an AI phase still trigger cleanup or restoration before the command exits",
-      "Documentation and CLI help describe the overall fix behavior and no longer tell users to keep phase prompt/example files in their project root",
+      "Tasks persist a priority value of high, medium, or low",
+      "Users can see priority on task cards without opening details",
+      "Users can edit priority from the task edit flow",
+      "Users can filter the task list by priority",
       "Typecheck passes",
-      "Manual CLI verification demonstrates init omits root artifacts, run/fix clean up or restore runtime prompt files, and fix removes only exact-match stale artifacts while preserving modified files"
+      "Relevant UI flows are verified in browser"
     ],
-    "passes": true,
-    "notes": "Final criteria satisfied across cycles 1-2: init no longer copies phase prompt/example artifacts into project roots, run/fix load bundled templates and restore or remove runtime prompt files, fix performs exact-match stale artifact cleanup while preserving modified files, and docs/help were updated. Evidence reviewed: commits 99c022c and 4fa6516 plus current source/docs and cli typecheck/build passing."
+    "passes": false,
+    "notes": ""
   },
   "planning": {
-    "cycle": 2,
-    "currentObjective": "Expand ralph fix into an overall safe cleanup flow for stale Ralph-generated root artifacts"
+    "cycle": 1,
+    "currentObjective": "Add the persisted priority field so later slices can build UI on top of it"
   },
   "prdChain": [
     {
       "cycle": 1,
-      "objective": "Implement dependency-sourced transient runtime prompts",
-      "status": "complete",
+      "objective": "Persist task priority in the data model",
+      "status": "active",
       "storyIds": ["US-001"],
-      "notes": "US-001 passed: init stopped copying phase prompt files; run/fix load prompts from package templates; runtime prompt cleanup/restoration added."
-    },
-    {
-      "cycle": 2,
-      "objective": "Safely remove stale Ralph-generated root artifacts",
-      "status": "complete",
-      "storyIds": ["US-002"],
-      "notes": "US-002 passed: exact-match stale artifact cleanup landed in ralph fix, init stopped copying prd.json.example, and CLI/docs now describe cleanup and preserved-file behavior."
+      "notes": ""
     }
   ],
   "userStories": [
     {
-      "id": "US-002",
-      "title": "Safely clean stale Ralph root artifacts",
-      "description": "As a Ralph user, I want the fix command to remove old Ralph-generated root artifacts only when they exactly match known generated versions, so my repository can be cleaned up without risking other people's customized work.",
+      "id": "US-001",
+      "title": "Add priority field to database",
+      "description": "As a developer, I need to store task priority so it persists across sessions.",
       "acceptanceCriteria": [
-        "Update ralph init so it no longer copies prd.json.example into the target project by default, in addition to not copying DEVELOPER.md, PLANNER.md, or DOCTOR.md",
-        "Add stale-artifact detection to ralph fix for root DEVELOPER.md, PLANNER.md, DOCTOR.md, prd.json.example, prompt.md, CLAUDE.md, and AGENTS.md",
-        "For DEVELOPER.md, PLANNER.md, and DOCTOR.md, remove the root file only when its full normalized content exactly matches a known current or previous Ralph-generated version of the same file",
-        "For prd.json.example and runtime prompt files, remove the root file only when its full normalized content exactly matches a known Ralph-generated/template/runtime version for that artifact",
-        "If a candidate artifact exists but does not exactly match a known generated version, leave it untouched and print a warning or summary that it was preserved",
-        "Run stale-artifact cleanup even when prd.json is already valid, so ralph fix is an overall cleanup/fix command rather than only a PRD-schema doctor",
-        "When both stale artifacts and prd.json validation errors exist, clean safe exact-match artifacts and still run the existing one-pass doctor flow with injected validation errors",
-        "Update README/CLI documentation to explain safe exact-match cleanup and the preserved-file behavior",
-        "Typecheck passes (`npm run typecheck` exits 0 in cli/)",
-        "Manual CLI verification in a temporary directory confirms exact-match artifacts are removed, modified artifacts are preserved, and valid prd.json plus stale artifacts does not invoke a doctor pass"
+        "Add priority column to tasks table: high, medium, or low",
+        "Default existing and new tasks to medium priority",
+        "Generate and run migration successfully",
+        "Typecheck passes"
       ],
       "priority": 1,
-      "storyPriority": "high",
-      "passes": true,
-      "notes": "Implemented exact-match stale artifact cleanup in ralph fix, removed prd.json.example from init, and updated CLI/docs to describe cleanup and preserved-file behavior."
+      "storyPriority": "medium",
+      "passes": false,
+      "notes": ""
     }
   ]
 }

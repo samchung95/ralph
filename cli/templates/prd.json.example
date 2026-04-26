@@ -1,7 +1,8 @@
 {
-  "project": "MyApp",
+  "title": "TEMPLATE PRD CANVAS - replace all example values before running Ralph",
+  "project": "TEMPLATE PROJECT - replace with your project name",
   "branchName": "ralph/task-priority",
-  "description": "Task Priority System - planner-routed Ralph run",
+  "description": "TEMPLATE PRD - Task Priority System example for a planner-routed Ralph run",
   "finalSuccessCriteria": {
     "description": "Users can assign, view, edit, and filter task priority across the app, with priority persisted between sessions and documented where relevant.",
     "acceptanceCriteria": [
@@ -34,6 +35,19 @@
       "assumptions": [
         "Existing task creation and edit flows should remain intact"
       ],
+      "supportingScope": {
+        "included": [
+          "documentation"
+        ],
+        "declined": [
+          "security check",
+          "cleanup beyond files touched for the feature",
+          "refactor beyond the priority implementation path"
+        ],
+        "successCriteriaResearch": [
+          "Reviewed existing usage docs and package scripts before phrasing documentation and verification criteria"
+        ]
+      },
       "suggestedAgents": [
         "developer",
         "uxui",
