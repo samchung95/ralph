@@ -1,48 +1,114 @@
 {
-  "project": "MyApp",
-  "branchName": "ralph/task-priority",
-  "description": "Task Priority System - first evolving PRD slice",
+  "project": "ralph-cli",
+  "branchName": "ralph/npm-release-cicd",
+  "description": "GitHub Actions CICD for npm release and staging package preparation",
   "finalSuccessCriteria": {
-    "description": "Users can assign, view, edit, and filter task priority across the app, with priority persisted between sessions.",
+    "description": "The CLI package can be validated, built, packaged, and published from versioned release branches, while staging branches produce a package state that can be installed directly from the GitHub repository link without publishing to npm.",
     "acceptanceCriteria": [
-      "Tasks persist a priority value of high, medium, or low",
-      "Users can see priority on task cards without opening details",
-      "Users can edit priority from the task edit flow",
-      "Users can filter the task list by priority",
-      "Typecheck passes",
-      "Relevant UI flows are verified in browser"
+      "A GitHub Actions workflow handles the CLI npm package from the existing cli workspace without disrupting the current CI and GitHub Pages workflows",
+      "Pushes to release branches matching release/vX.Y.Z validate the package, verify the branch version matches cli/package.json, build the CLI, run package preview checks, and publish @samuelchung/ralph-cli to npm using the NPM_TOKEN secret",
+      "Release publishing uses npm public package settings and avoids committing or printing npm credentials",
+      "Pushes to staging branches matching staging/vX.Y.Z-* validate and build the CLI package without publishing to npm",
+      "Staging branches leave the package installable from the GitHub repository ref, for example npm install github:samchung95/ralph-cli#staging/vX.Y.Z-rc.1, by ensuring the package can prepare its dist output during git-based npm install",
+      "The workflow uses lockfile-based installs, Node.js 20, and the strongest available package checks: typecheck, build, init test, and npm pack dry run",
+      "README or CLI package documentation describes the release branch convention, staging branch convention, required NPM_TOKEN secret, and how to install a staging ref from GitHub",
+      "Relevant verification commands pass locally where possible"
     ],
     "passes": false,
     "notes": ""
   },
   "planning": {
     "cycle": 1,
-    "currentObjective": "Add the persisted priority field so later slices can build UI on top of it"
+    "currentObjective": "Implement the npm release/staging workflow and package support for git-based staging installs",
+    "promptExpansion": {
+      "intent": "Add a reliable GitHub Actions release path for the npm CLI package and a staging path that supports testing branch builds through npm's GitHub dependency install flow.",
+      "inScope": [
+        "GitHub Actions workflow for cli package release and staging branches",
+        "Release branch pattern and version validation",
+        "Staging branch package preparation for git-based npm install",
+        "CLI package scripts needed to support GitHub repo installs",
+        "Release and staging usage documentation"
+      ],
+      "outOfScope": [
+        "Changing the GitHub Pages flowchart deploy workflow except to avoid conflicts",
+        "Publishing the flowchart app",
+        "Changing the package name or repository ownership",
+        "Adding unrelated release automation such as changelog generation unless required for the publish workflow"
+      ],
+      "assumptions": [
+        "The production release branch convention should be release/vX.Y.Z, where X.Y.Z must match cli/package.json version",
+        "The staging branch convention should be staging/vX.Y.Z-* for release candidates or pre-release testing",
+        "Upload means publishing the npm package to the public npm registry rather than GitHub Packages",
+        "The npm automation token will be provided as the GitHub Actions secret NPM_TOKEN",
+        "The package should continue to be built from the cli directory in this monorepo-style repository"
+      ],
+      "supportingScope": {
+        "included": [
+          "documentation",
+          "security check for npm credentials and workflow permissions",
+          "test hardening limited to available package verification commands"
+        ],
+        "declined": [
+          "UI/browser verification",
+          "broad refactor",
+          "unrelated cleanup"
+        ],
+        "successCriteriaResearch": [
+          "Reviewed cli/package.json and found scripts for typecheck, build, test:init, pack:dry-run, prepack, and prepublishOnly",
+          "Reviewed existing .github/workflows/ci.yml and .github/workflows/deploy.yml to avoid disrupting current CI and Pages deployment",
+          "Reviewed README.md and cli/README.md release/package sections for places to document branch conventions and staging installs"
+        ]
+      },
+      "suggestedAgents": [
+        "developer",
+        "documentation"
+      ]
+    },
+    "activeHandoff": {
+      "agent": "developer",
+      "objective": "Implement the npm release/staging GitHub Actions workflow and package-script support needed for staging refs to be installable from GitHub.",
+      "scope": {
+        "include": [
+          "Add or update GitHub Actions workflow files for release/vX.Y.Z and staging/vX.Y.Z-* branch handling",
+          "Use the existing cli workspace, cli/package-lock.json, Node.js 20, and npm ci for package verification",
+          "Validate release branch versions against cli/package.json before publishing",
+          "Run typecheck, build, test:init when present, and npm pack --dry-run or the existing pack dry-run script",
+          "Publish @samuelchung/ralph-cli to npm only on release branches using NPM_TOKEN and public package access",
+          "Ensure the CLI package can build dist during npm git dependency installs from staging refs, for example through an appropriate prepare script"
+        ],
+        "exclude": [
+          "Do not publish anything or run remote side-effecting npm commands locally",
+          "Do not modify the GitHub Pages deploy workflow except if required to avoid conflicts",
+          "Do not perform the documentation handoff beyond comments or inline workflow clarity needed for maintainability",
+          "Do not change package ownership, repository URL, or unrelated CLI behavior"
+        ]
+      },
+      "rules": [
+        "Do not commit or print npm credentials; rely only on the NPM_TOKEN GitHub secret in workflow configuration",
+        "Keep workflow permissions minimal and avoid expanding repository write access unless required by GitHub Actions behavior",
+        "Preserve existing CI behavior for normal branches and pull requests",
+        "Use existing package scripts where possible instead of duplicating commands unnecessarily",
+        "Add or adjust focused tests only if needed for the package-script or init behavior touched by this handoff"
+      ],
+      "comments": "The run is not complete because release/staging automation is absent. Existing uncommitted edits touch package metadata, init docs, and an init test, but the developer should verify whether those changes are relevant before building on them and must not revert unrelated user work.",
+      "successCriteria": [
+        "A GitHub Actions workflow exists that runs for release/vX.Y.Z and staging/vX.Y.Z-* branch pushes without changing the Pages deploy workflow behavior",
+        "Release branches install from cli/package-lock.json on Node.js 20, verify cli/package.json version matches the release branch, run package checks, and publish with npm publish --access public using NPM_TOKEN",
+        "Staging branches install from cli/package-lock.json on Node.js 20, run package checks, and do not publish to npm",
+        "The CLI package includes package-script support so npm install github:samchung95/ralph-cli#staging/vX.Y.Z-rc.1 can build the package during git install",
+        "Local verification commands for the touched package path pass where possible, and any commands that cannot be run are recorded in progress.txt"
+      ],
+      "status": "ready"
+    }
   },
   "prdChain": [
     {
       "cycle": 1,
-      "objective": "Persist task priority in the data model",
+      "objective": "Implement the npm release/staging workflow and package support for git-based staging installs",
       "status": "active",
-      "storyIds": ["US-001"],
-      "notes": ""
+      "storyIds": [],
+      "notes": "Assigned to developer; documentation will be considered after implementation evidence exists."
     }
   ],
-  "userStories": [
-    {
-      "id": "US-001",
-      "title": "Add priority field to database",
-      "description": "As a developer, I need to store task priority so it persists across sessions.",
-      "acceptanceCriteria": [
-        "Add priority column to tasks table: high, medium, or low",
-        "Default existing and new tasks to medium priority",
-        "Generate and run migration successfully",
-        "Typecheck passes"
-      ],
-      "priority": 1,
-      "storyPriority": "medium",
-      "passes": false,
-      "notes": ""
-    }
-  ]
+  "userStories": []
 }

@@ -1,3 +1,43 @@
-# Ralph Progress Log
-Started: Wed Apr 22 2026 12:38:25 GMT+0800 (Singapore Standard Time)
+# Ralph Progress
+
+Goal: Add GitHub Actions CICD so versioned release branches publish the CLI npm package and staging branches prepare git-installable package builds.
+Branch: ralph/npm-release-cicd
+Cycle: 1
+Status: assigned
+Current agent: developer
+Current objective: Implement the npm release/staging workflow and package support for git-based staging installs
+
+Next:
+- Developer implements the release/staging workflow and package-script support, then records verification.
+
+Blockers:
+- none
+
+Important patterns:
+- The npm package is in cli with package name @samuelchung/ralph-cli.
+- Existing workflows are .github/workflows/ci.yml for CLI checks and .github/workflows/deploy.yml for flowchart Pages deployment.
+- Assumed release branch pattern: release/vX.Y.Z.
+- Assumed staging branch pattern: staging/vX.Y.Z-*.
+- Assumed npm publish secret: NPM_TOKEN.
+---
+
+Started: 2026-04-28 21:38 +0800
+
+## C1 Planner
+Assigned agent: developer
+Objective: Implement the npm release/staging workflow and package support for git-based staging installs
+
+Scope:
+- In: GitHub Actions release/staging branch workflow, cli workspace package checks, release version validation, npm publish configuration, and package-script support for staging git installs.
+- Out: GitHub Pages deploy changes unless conflict avoidance requires them, documentation handoff work, package ownership changes, and unrelated CLI behavior.
+
+Success criteria:
+- Workflow runs on release/vX.Y.Z and staging/vX.Y.Z-* branch pushes using Node.js 20, cli/package-lock.json, npm ci, and package checks.
+- Release branches verify the branch version against cli/package.json and publish @samuelchung/ralph-cli with npm publish --access public using NPM_TOKEN.
+- Staging branches validate/build/pack without publishing and leave the package installable from a GitHub ref by building dist during npm git installs.
+- Local verification for touched package paths passes where possible, with any unavailable checks recorded.
+
+Planner notes:
+- Final success is not met because no release/staging workflow exists yet.
+- Existing uncommitted edits touch package metadata, init docs, and an init test; verify relevance and do not revert unrelated user work.
 ---
