@@ -25,7 +25,7 @@ Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 Install Ralph globally from npm:
 
 ```bash
-npm install -g ralph-cli
+npm install -g @samuelchung/ralph-cli
 ralph --version
 ```
 
@@ -38,7 +38,7 @@ cd your-project
 ralph init
 ```
 
-This creates `progress.txt`. Ralph keeps role prompts (`PLANNER.md`, `DEVELOPER.md`, `UXUI.md`, `DOCUMENTATION.md`, `WEB_BROWSER_SAFE.md`, `WEB_BROWSER_BYPASS.md`, `DOCTOR.md`), `PROGRESS_INSTRUCT.md`, and `prd.json.example` bundled in the installed package instead of copying them into your project root.
+This creates `progress.txt` and a template `prd.json` copied from Ralph's bundled `prd.json.example`, so agents can see the exact expected PRD structure before replacing the example values. Ralph keeps role prompts (`PLANNER.md`, `DEVELOPER.md`, `UXUI.md`, `DOCUMENTATION.md`, `WEB_BROWSER_SAFE.md`, `WEB_BROWSER_BYPASS.md`, `DOCTOR.md`) and `PROGRESS_INSTRUCT.md` bundled in the installed package instead of copying them into your project root.
 
 Install the `/ralph` setup skill into your AI tool:
 
@@ -156,10 +156,10 @@ This enables automatic handoff when context fills up, allowing Ralph to handle l
 
 ### 1. Set Up the First Ralph Step
 
-Use the Ralph skill to create the initial evolving `prd.json`:
+Use the Ralph skill to replace the generated template values in the initial evolving `prd.json`:
 
 ```
-Load the ralph skill and set up Ralph for [your feature description]
+Load the ralph skill and update prd.json for [your feature description]
 ```
 
 Answer any clarifying questions. The skill expands your rough prompt into `finalSuccessCriteria`, planner context, and a compact `progress.txt`. Ralph starts with the planner, which writes `planning.activeHandoff` and chooses the first agent.
@@ -250,8 +250,27 @@ To preview the npm package before publishing:
 ```bash
 cd /path/to/ralph-cli/cli
 npm run typecheck
+npm run build
+npm run test:init
 npm run pack:dry-run
 ```
+
+### Release and Staging Branches
+
+The npm release workflow lives at `.github/workflows/npm-release.yml` and runs only for these branch pushes:
+
+- `release/vX.Y.Z` - `X.Y.Z` must match `cli/package.json`. The workflow installs from `cli/package-lock.json`, runs `npm run typecheck`, `npm run build`, `npm run test:init`, and `npm run pack:dry-run`, then publishes `@samuelchung/ralph-cli` with `npm publish --access public`.
+- `staging/vX.Y.Z-*` - the branch version prefix must match `cli/package.json`. The workflow runs the same validation and packaging checks, but does not publish to npm.
+
+Configure the npm automation token as the GitHub Actions secret `NPM_TOKEN`. Do not commit tokens or put token values in workflow logs.
+
+To test a staging branch through npm's GitHub install path:
+
+```bash
+npm install github:samchung95/ralph-cli#staging/vX.Y.Z-rc.1
+```
+
+GitHub dependency installs use the repository root `package.json` wrapper. Its `prepare` script installs and builds the `cli` package so the installed command points at `cli/dist/index.js`.
 
 ## Key Files
 

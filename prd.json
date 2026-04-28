@@ -97,7 +97,7 @@
         "Docs accurately summarize the validation checks and package paths used by the release workflow",
         "Existing uncommitted init/prd.json template documentation edits are preserved or intentionally reconciled, and progress.txt records the verification"
       ],
-      "status": "ready"
+      "status": "complete"
     }
   },
   "prdChain": [
@@ -111,9 +111,9 @@
     {
       "cycle": 2,
       "objective": "Document the npm release/staging workflow and staging GitHub install path",
-      "status": "active",
+      "status": "complete",
       "storyIds": [],
-      "notes": "Assigned to documentation to satisfy the remaining global documentation criterion."
+      "notes": "Documentation updated in README.md and cli/README.md with release/staging branch conventions, NPM_TOKEN guidance, validation checks, and staging GitHub install path."
     }
   ],
   "userStories": []

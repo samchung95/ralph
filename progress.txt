@@ -3,12 +3,12 @@
 Goal: Add GitHub Actions CICD so versioned release branches publish the CLI npm package and staging branches prepare git-installable package builds.
 Branch: ralph/npm-release-cicd
 Cycle: 2
-Status: assigned
+Status: complete
 Current agent: documentation
 Current objective: Document the npm release/staging workflow and staging GitHub install path
 
 Next:
-- Documentation updates README.md and/or cli/README.md with release/staging branch, NPM_TOKEN, and GitHub staging install guidance.
+- Planner reviews the completed documentation handoff and evaluates final success criteria.
 
 Blockers:
 - none
@@ -102,4 +102,37 @@ Planner notes:
 - Developer cycle 1 is complete and committed as 07307b7.
 - Final success is not yet met because the release/staging documentation criterion is missing; current README diffs are about init-generated prd.json templates.
 - Documentation should verify wording against `.github/workflows/npm-release.yml`, `cli/package.json`, and root `package.json`.
+---
+
+## C2 Documentation
+Objective: Document the npm release/staging workflow and staging GitHub install path
+
+Did:
+- Updated README.md and cli/README.md with the scoped npm package install command, release and staging branch conventions, NPM_TOKEN guidance, workflow validation checks, and the staging GitHub install example.
+- Preserved the existing init-generated prd.json template documentation edits.
+
+Structural changes:
+- Added release/staging package guidance near the existing package preview and published package sections.
+- No product code, package metadata, or workflow behavior changed.
+
+Files touched:
+- README.md
+- cli/README.md
+- prd.json
+- progress.txt
+
+Verification:
+- Checked wording against `.github/workflows/npm-release.yml`, `cli/package.json`, and root `package.json`.
+- `npm run typecheck` in `cli`: passed.
+- `npm run build` in `cli`: passed.
+- `npm run test:init` in `cli`: passed, 2 tests.
+- `npm run pack:dry-run` in `cli`: passed and showed `dist/index.js` in the CLI package preview.
+- `npm pack --dry-run` at repo root: passed and showed `cli/dist/index.js` in the git-install wrapper package preview.
+- `rg` review found release/staging, NPM_TOKEN, and staging GitHub install guidance in README.md and cli/README.md, with no stale unscoped global install command left.
+
+Problems:
+- none
+
+Notes for planner:
+- Handoff success criteria are met; planner can evaluate final success next.
 ---

@@ -5,7 +5,7 @@ CLI tool for [Ralph](https://github.com/snarktank/ralph) — an autonomous plann
 ## Install
 
 ```bash
-npm install -g ralph-cli
+npm install -g @samuelchung/ralph-cli
 ralph --version
 ```
 
@@ -30,8 +30,8 @@ ralph bypass on
 # Optional: remember auto-approval for Copilot prompts
 ralph auto-approve on
 
-# 3. Ask your AI tool to set up the first evolving prd.json
-# "Use the /ralph skill to set up Ralph for [feature]"
+# 3. Replace the generated prd.json template values
+# "Use the /ralph skill to update prd.json for [feature]"
 
 # 4. Run the planner-routed agent loop
 ralph run                  # Claude Code, 10 cycles
@@ -52,7 +52,9 @@ ralph fix                  # Clean stale Ralph artifacts and repair prd.json whe
 
 ### `ralph init`
 
-Creates `progress.txt` in your project root so you can track Ralph iterations. Role prompt files (`PLANNER.md`, `DEVELOPER.md`, `UXUI.md`, `DOCUMENTATION.md`, `WEB_BROWSER_SAFE.md`, `WEB_BROWSER_BYPASS.md`, `DOCTOR.md`), `PROGRESS_INSTRUCT.md`, and `prd.json.example` stay bundled in the Ralph package, so they no longer need to live in your project root.
+Creates `progress.txt` and a template `prd.json` in your project root. The PRD is copied from Ralph's bundled `prd.json.example` so agents can see the exact expected structure before replacing the example values with your feature's real final success criteria and planner context.
+
+Role prompt files (`PLANNER.md`, `DEVELOPER.md`, `UXUI.md`, `DOCUMENTATION.md`, `WEB_BROWSER_SAFE.md`, `WEB_BROWSER_BYPASS.md`, `DOCTOR.md`) and `PROGRESS_INSTRUCT.md` stay bundled in the Ralph package, so they no longer need to live in your project root.
 
 ```bash
 cd your-project
@@ -75,7 +77,7 @@ ralph install --tool copilot
 ```
 
 After installing, you can use this skill in the selected AI tool:
-- `/ralph` — Expand the request and set up planner-routed `prd.json` and `progress.txt`
+- `/ralph` — Expand the request and replace the template `prd.json` values with planner-routed feature context
 
 ### `ralph bypass [on|off|status]`
 
@@ -214,10 +216,27 @@ The npm package is intentionally small. `package.json` uses a `files` allowlist 
 
 Source files, development scripts, `node_modules`, local Ralph run state, archives, and visualization assets are excluded from the published package.
 
-Before publishing:
+## Release and Staging
+
+The registry package is `@samuelchung/ralph-cli`, and npm registry publishing runs from the `cli` directory. The release workflow is `.github/workflows/npm-release.yml`.
+
+Use `release/vX.Y.Z` branches for npm releases. `X.Y.Z` must exactly match `cli/package.json` `version`; the workflow validates that match before publishing with `npm publish --access public`. Configure the npm automation token in GitHub Actions as the `NPM_TOKEN` secret.
+
+Use `staging/vX.Y.Z-*` branches for release candidates and package-install testing. The version prefix must match `cli/package.json`, and staging branches run the package checks without publishing to npm.
+
+Both branch types use Node.js 20, install with `npm ci` from `cli/package-lock.json`, then run:
 
 ```bash
 npm run typecheck
+npm run build
+npm run test:init
 npm run pack:dry-run
-npm publish
 ```
+
+To test a staging ref through npm's GitHub install path:
+
+```bash
+npm install github:samchung95/ralph-cli#staging/vX.Y.Z-rc.1
+```
+
+GitHub installs use the repository root `package.json` wrapper. Its `prepare` script runs `npm --prefix cli ci && npm --prefix cli run build`, and its `bin` entry points `ralph` at `cli/dist/index.js`.
