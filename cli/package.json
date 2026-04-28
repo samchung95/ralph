@@ -1,5 +1,5 @@
 {
-  "name": "ralph-cli",
+  "name": "@samuelchung/ralph-cli",
   "version": "0.1.0",
   "description": "Run Ralph planner-routed AI coding-agent loops until final success criteria pass",
   "type": "module",
@@ -9,12 +9,14 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm --clean",
     "dev": "tsup src/index.ts --format esm --watch",
+    "prepare": "npm run build",
+    "test:init": "npm run build && node --test tests/init.test.mjs",
     "token-count": "node scripts/count-context-tokens.mjs",
     "tokens": "node scripts/count-context-tokens.mjs",
     "typecheck": "tsc --noEmit",
     "pack:dry-run": "npm pack --dry-run",
     "prepack": "npm run build",
-    "prepublishOnly": "npm run typecheck && npm run build"
+    "prepublishOnly": "npm run typecheck && npm run build && npm run test:init"
   },
   "files": [
     "LICENSE",

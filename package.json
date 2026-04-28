@@ -1,0 +1,49 @@
+{
+  "name": "@samuelchung/ralph-cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Run Ralph planner-routed AI coding-agent loops until final success criteria pass",
+  "type": "module",
+  "bin": {
+    "ralph": "cli/dist/index.js"
+  },
+  "scripts": {
+    "prepare": "npm --prefix cli ci && npm --prefix cli run build"
+  },
+  "files": [
+    "cli/dist",
+    "cli/templates",
+    "cli/LICENSE",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "ralph",
+    "ai",
+    "agent",
+    "autonomous",
+    "claude",
+    "amp",
+    "copilot",
+    "codex",
+    "prd",
+    "coding-agent"
+  ],
+  "author": "snarktank",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samchung95/ralph-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/samchung95/ralph-cli/issues"
+  },
+  "homepage": "https://github.com/samchung95/ralph-cli#readme",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

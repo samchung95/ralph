@@ -32,7 +32,7 @@ program
 program
   .command("init")
   .description(
-    "Initialize Ralph in a project (creates progress.txt; PRD template stays bundled)"
+    "Initialize Ralph in a project (creates progress.txt and a template prd.json)"
   )
   .option("-d, --dir <path>", "Target project directory", process.cwd())
   .option("--force", "Overwrite existing files", false)

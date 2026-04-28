@@ -1,0 +1,88 @@
+name: CLI npm release
+
+on:
+  push:
+    branches:
+      - "release/v*.*.*"
+      - "staging/v*.*.*-*"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Validate and package CLI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          cache: "npm"
+          cache-dependency-path: cli/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: cli
+
+      - name: Validate branch version
+        id: package_version
+        shell: bash
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          branch="${GITHUB_REF_NAME}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+          if [[ "${branch}" == release/v* ]]; then
+            if [[ ! "${branch}" =~ ^release/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::Release branches must match release/vX.Y.Z."
+              exit 1
+            fi
+
+            expected="release/v${version}"
+            if [[ "${branch}" != "${expected}" ]]; then
+              echo "::error::Release branch ${branch} must match cli/package.json version ${version}."
+              exit 1
+            fi
+          elif [[ "${branch}" == staging/v* ]]; then
+            if [[ ! "${branch}" =~ ^staging/v[0-9]+\.[0-9]+\.[0-9]+-.+$ ]]; then
+              echo "::error::Staging branches must match staging/vX.Y.Z-*."
+              exit 1
+            fi
+
+            if [[ "${branch}" != staging/v${version}-* ]]; then
+              echo "::error::Staging branch ${branch} must use cli/package.json version ${version}."
+              exit 1
+            fi
+          else
+            echo "::error::Unsupported branch ${branch}."
+            exit 1
+          fi
+        working-directory: cli
+
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: cli
+
+      - name: Build
+        run: npm run build
+        working-directory: cli
+
+      - name: Init test
+        run: npm run test:init
+        working-directory: cli
+
+      - name: Pack dry run
+        run: npm run pack:dry-run
+        working-directory: cli
+
+      - name: Publish to npm
+        if: ${{ startsWith(github.ref_name, 'release/v') }}
+        run: npm publish --access public
+        working-directory: cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
