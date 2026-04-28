@@ -2,13 +2,13 @@
 
 Goal: Add GitHub Actions CICD so versioned release branches publish the CLI npm package and staging branches prepare git-installable package builds.
 Branch: ralph/npm-release-cicd
-Cycle: 1
+Cycle: 2
 Status: assigned
-Current agent: developer
-Current objective: Implement the npm release/staging workflow and package support for git-based staging installs
+Current agent: documentation
+Current objective: Document the npm release/staging workflow and staging GitHub install path
 
 Next:
-- Developer implements the release/staging workflow and package-script support, then records verification.
+- Documentation updates README.md and/or cli/README.md with release/staging branch, NPM_TOKEN, and GitHub staging install guidance.
 
 Blockers:
 - none
@@ -19,6 +19,7 @@ Important patterns:
 - Assumed release branch pattern: release/vX.Y.Z.
 - Assumed staging branch pattern: staging/vX.Y.Z-*.
 - Assumed npm publish secret: NPM_TOKEN.
+- GitHub staging installs use the repository root package.json wrapper, while npm registry publishing still runs from cli.
 ---
 
 Started: 2026-04-28 21:38 +0800
@@ -40,4 +41,65 @@ Success criteria:
 Planner notes:
 - Final success is not met because no release/staging workflow exists yet.
 - Existing uncommitted edits touch package metadata, init docs, and an init test; verify relevance and do not revert unrelated user work.
+---
+
+## C1 Developer
+Objective: Implement the npm release/staging workflow and package support for git-based staging installs
+
+Did:
+- Added `.github/workflows/npm-release.yml` for release/vX.Y.Z and staging/vX.Y.Z-* pushes with Node.js 20, cli/package-lock caching, npm ci, branch/version validation, package checks, and npm publish only on release branches using `NPM_TOKEN`.
+- Added CLI package scripts/metadata for public scoped publishing and prepare-time builds.
+- Added a repository root package wrapper so `npm install github:samchung95/ralph-cli#staging/vX.Y.Z-rc.1` can build and expose `cli/dist/index.js` from the monorepo root.
+- Added package/workflow regression tests and kept the init test path committed because the release workflow now runs `npm run test:init`.
+
+Structural changes:
+- New release workflow under `.github/workflows/npm-release.yml`.
+- Root `package.json` is a private git-install wrapper; npm registry publishing remains scoped to `cli/package.json`.
+- Added `cli/.npmignore` so root package dry-runs include the built `cli/dist` despite `cli/.gitignore`.
+
+Files touched:
+- `.github/workflows/npm-release.yml`
+- `package.json`
+- `cli/package.json`
+- `cli/package-lock.json`
+- `cli/.npmignore`
+- `cli/tests/release-workflow.test.mjs`
+- `cli/tests/init.test.mjs`
+- `cli/src/commands/init.ts`
+- `cli/src/index.ts`
+
+Verification:
+- `npm run typecheck` in `cli`: passed.
+- `npm run build` in `cli`: passed.
+- `npm run test:init` in `cli`: passed, 2 tests.
+- `node --test tests/release-workflow.test.mjs` in `cli`: passed, 4 tests.
+- `npm run pack:dry-run` in `cli`: passed and showed `dist/index.js` in the CLI package preview.
+- `npm pack --dry-run` at repo root: passed and showed `cli/dist/index.js` in the git-install wrapper package preview.
+
+Problems:
+- Root package dry-run initially omitted `cli/dist/index.js` because nested `cli/.gitignore` ignored `dist`; fixed with `cli/.npmignore` and verified by root `npm pack --dry-run`.
+
+Notes for planner:
+- Commit: `07307b7 feat: developer cycle 1 - npm release cicd`.
+- Documentation updates for release/staging usage are still a likely next handoff; pre-existing README edits remain uncommitted.
+---
+
+## C2 Planner
+Assigned agent: documentation
+Objective: Document the npm release/staging workflow and staging GitHub install path
+
+Scope:
+- In: README.md and/or cli/README.md release/staging guidance, including branch conventions, NPM_TOKEN, package validation checks, and GitHub staging install example.
+- Out: Product code, workflow behavior, package metadata, publishing actions, and unrelated release automation or Pages documentation.
+
+Success criteria:
+- Docs describe release/vX.Y.Z branches and version matching against cli/package.json.
+- Docs describe staging/vX.Y.Z-* branches and include `npm install github:samchung95/ralph-cli#staging/vX.Y.Z-rc.1`.
+- Docs describe the required `NPM_TOKEN` GitHub Actions secret and public npm publish behavior without exposing credentials.
+- Docs accurately summarize the workflow checks and package paths, preserving existing init/prd.json template documentation edits where possible.
+
+Planner notes:
+- Developer cycle 1 is complete and committed as 07307b7.
+- Final success is not yet met because the release/staging documentation criterion is missing; current README diffs are about init-generated prd.json templates.
+- Documentation should verify wording against `.github/workflows/npm-release.yml`, `cli/package.json`, and root `package.json`.
 ---
