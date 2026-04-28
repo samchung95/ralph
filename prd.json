@@ -14,12 +14,12 @@
       "README or CLI package documentation describes the release branch convention, staging branch convention, required NPM_TOKEN secret, and how to install a staging ref from GitHub",
       "Relevant verification commands pass locally where possible"
     ],
-    "passes": false,
-    "notes": ""
+    "passes": true,
+    "notes": "Final criteria met by committed workflow/package implementation 07307b7 and documentation 6b8dd30. Verified on 2026-04-28 with rg review for release/staging/NPM_TOKEN docs and workflow entries, npm run typecheck, npm run build, npm run test:init, npm run pack:dry-run in cli, and npm pack --dry-run at repo root."
   },
   "planning": {
     "cycle": 2,
-    "currentObjective": "Document the npm release/staging workflow and staging GitHub install path",
+    "currentObjective": "Final success criteria met; Ralph run complete",
     "promptExpansion": {
       "intent": "Add a reliable GitHub Actions release path for the npm CLI package and a staging path that supports testing branch builds through npm's GitHub dependency install flow.",
       "inScope": [

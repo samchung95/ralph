@@ -4,11 +4,11 @@ Goal: Add GitHub Actions CICD so versioned release branches publish the CLI npm 
 Branch: ralph/npm-release-cicd
 Cycle: 2
 Status: complete
-Current agent: documentation
-Current objective: Document the npm release/staging workflow and staging GitHub install path
+Current agent: planner
+Current objective: Final success criteria met; Ralph run complete
 
 Next:
-- Planner reviews the completed documentation handoff and evaluates final success criteria.
+- none
 
 Blockers:
 - none
@@ -135,4 +135,22 @@ Problems:
 
 Notes for planner:
 - Handoff success criteria are met; planner can evaluate final success next.
+---
+
+## C2 Planner
+Assigned agent: none
+Objective: Evaluate final success criteria and close the Ralph run
+
+Scope:
+- In: Final criteria review, committed workflow/docs evidence, and fresh local verification.
+- Out: New product code, workflow changes, docs changes, or publishing actions.
+
+Success criteria:
+- finalSuccessCriteria.passes is true with concise evidence in prd.json.
+- progress.txt records completion evidence and no next handoff is assigned.
+
+Planner notes:
+- Final criteria are met by committed implementation 07307b7 and documentation 6b8dd30.
+- Fresh verification passed: rg review for release/staging/NPM_TOKEN docs and workflow entries; npm run typecheck, npm run build, npm run test:init, npm run pack:dry-run in cli; npm pack --dry-run at repo root.
+- Worktree has no tracked diff before completion metadata edits; AGENTS.md remains untracked and untouched.
 ---
