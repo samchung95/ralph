@@ -1,6 +1,6 @@
 {
   "name": "@samuelchung/ralph-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Run Ralph planner-routed AI coding-agent loops until final success criteria pass",
   "type": "module",
   "bin": {

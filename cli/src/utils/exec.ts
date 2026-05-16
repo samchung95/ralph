@@ -40,13 +40,19 @@ export function exec(
     const child = spawn(command, args, {
       cwd: options?.cwd,
       shell: true,
-      stdio: shouldPipeStdin ? ["pipe", "pipe", "pipe"] : ["inherit", "pipe", "pipe"],
+      stdio: [shouldPipeStdin ? "pipe" : "ignore", "pipe", "pipe"],
     });
 
     let stdout = "";
     let stderr = "";
     let recentOutput = "";
     let lastApprovalAt = 0;
+
+    const writeAutoApproveInputs = () => {
+      for (const input of options?.autoApprove?.inputs ?? DEFAULT_APPROVAL_INPUTS) {
+        child.stdin?.write(input);
+      }
+    };
 
     const maybeAutoApprove = (text: string) => {
       const autoApprove = options?.autoApprove;
@@ -61,9 +67,7 @@ export function exec(
       if (now - lastApprovalAt < 1000) return;
       lastApprovalAt = now;
 
-      for (const input of autoApprove.inputs ?? DEFAULT_APPROVAL_INPUTS) {
-        child.stdin.write(input);
-      }
+      writeAutoApproveInputs();
 
       if (!options?.silent) {
         const label = autoApprove.label ? ` ${autoApprove.label}` : "";
@@ -91,6 +95,11 @@ export function exec(
 
     if (options?.stdin && child.stdin) {
       child.stdin.write(options.stdin);
+      child.stdin.end();
+    } else if (options?.autoApprove?.enabled && child.stdin) {
+      // In programmatic runs, a child waiting on stdin EOF can otherwise keep
+      // Ralph blocked even after it has enough approval input to continue.
+      writeAutoApproveInputs();
       child.stdin.end();
     }
 
