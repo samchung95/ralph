@@ -16,8 +16,10 @@ test("package metadata supports npm publishing and git dependency installs", asy
   assert.equal(packageJson.name, "@samuelchung/ralph-cli");
   assert.equal(packageJson.publishConfig?.access, "public");
   assert.equal(packageJson.scripts?.prepare, "npm run build");
+  assert.equal(packageJson.scripts?.test, "node --test tests/*.test.mjs");
   assert.match(packageJson.scripts?.prepublishOnly ?? "", /typecheck/);
   assert.match(packageJson.scripts?.prepublishOnly ?? "", /build/);
+  assert.match(packageJson.scripts?.prepublishOnly ?? "", /npm test/);
 });
 
 test("repository root exposes the built CLI for GitHub dependency installs", async () => {
@@ -51,21 +53,25 @@ test("nested npm ignore keeps built dist eligible for root GitHub package", asyn
   assert.equal(ignoredEntries.includes("dist"), false);
 });
 
-test("npm release workflow validates release/staging branches before publish", async () => {
+test("npm release workflow validates release tags and staging branches before publish", async () => {
   const workflow = await readFile(workflowPath, "utf8");
 
-  assert.match(workflow, /branches:\s*\n\s*- "release\/v\*\.\*\.\*"/);
-  assert.match(workflow, /branches:\s*\n(?:\s*- .+\n)*\s*- "staging\/v\*\.\*\.\*-.*"/);
-  assert.match(workflow, /node-version:\s*"20"/);
-  assert.match(workflow, /cache-dependency-path:\s*cli\/package-lock\.json/);
+  assert.match(workflow, /tags:\s*\n\s*- "v\*"/);
+  assert.match(workflow, /branches:\s*\n\s*- "staging\/v\*\.\*\.\*-.*"/);
+  assert.match(workflow, /id-token:\s*write/);
+  assert.match(workflow, /actions\/checkout@v6/);
+  assert.match(workflow, /actions\/setup-node@v6/);
+  assert.match(workflow, /node-version:\s*"24"/);
+  assert.match(workflow, /package-manager-cache:\s*false/);
+  assert.doesNotMatch(workflow, /cache-dependency-path/);
   assert.match(workflow, /npm ci/);
   assert.match(workflow, /npm run typecheck/);
   assert.match(workflow, /npm run build/);
-  assert.match(workflow, /npm run test:init/);
+  assert.match(workflow, /npm test/);
   assert.match(workflow, /npm run pack:dry-run/);
-  assert.match(workflow, /expected="release\/v\$\{version\}"/);
-  assert.match(workflow, /\[\[ "\$\{branch\}" != "\$\{expected\}" \]\]/);
-  assert.match(workflow, /NODE_AUTH_TOKEN:\s*\$\{\{\s*secrets\.NPM_TOKEN\s*\}\}/);
+  assert.match(workflow, /expected="v\$\{version\}"/);
+  assert.match(workflow, /\[\[ "\$\{ref_name\}" != "\$\{expected\}" \]\]/);
   assert.match(workflow, /npm publish --access public/);
-  assert.match(workflow, /if:\s*\$\{\{\s*startsWith\(github\.ref_name, 'release\/v'\)\s*\}\}/);
+  assert.match(workflow, /if:\s*\$\{\{\s*github\.ref_type == 'tag' && startsWith\(github\.ref_name, 'v'\)\s*\}\}/);
+  assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN/);
 });

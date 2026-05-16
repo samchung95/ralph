@@ -257,12 +257,12 @@ npm run pack:dry-run
 
 ### Release and Staging Branches
 
-The npm release workflow lives at `.github/workflows/npm-release.yml` and runs only for these branch pushes:
+The npm release workflow lives at `.github/workflows/npm-release.yml` and runs for release tag pushes plus staging branch pushes:
 
-- `release/vX.Y.Z` - `X.Y.Z` must match `cli/package.json`. The workflow installs from `cli/package-lock.json`, runs `npm run typecheck`, `npm run build`, `npm run test:init`, and `npm run pack:dry-run`, then publishes `@samuelchung/ralph-cli` with `npm publish --access public`.
+- `vX.Y.Z` tags - `X.Y.Z` must match `cli/package.json`. The workflow installs from `cli/package-lock.json`, runs `npm run typecheck`, `npm run build`, `npm test`, and `npm run pack:dry-run`, then publishes `@samuelchung/ralph-cli` with `npm publish --access public`.
 - `staging/vX.Y.Z-*` - the branch version prefix must match `cli/package.json`. The workflow runs the same validation and packaging checks, but does not publish to npm.
 
-Configure the npm automation token as the GitHub Actions secret `NPM_TOKEN`. Do not commit tokens or put token values in workflow logs.
+Configure npm trusted publishing for GitHub Actions with owner `samchung95`, repository `ralph-cli`, workflow filename `npm-release.yml`, and no environment name unless the workflow is updated to use one. The workflow uses OIDC, so it does not require an `NPM_TOKEN` secret.
 
 To test a staging branch through npm's GitHub install path:
 

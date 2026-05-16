@@ -220,16 +220,16 @@ Source files, development scripts, `node_modules`, local Ralph run state, archiv
 
 The registry package is `@samuelchung/ralph-cli`, and npm registry publishing runs from the `cli` directory. The release workflow is `.github/workflows/npm-release.yml`.
 
-Use `release/vX.Y.Z` branches for npm releases. `X.Y.Z` must exactly match `cli/package.json` `version`; the workflow validates that match before publishing with `npm publish --access public`. Configure the npm automation token in GitHub Actions as the `NPM_TOKEN` secret.
+Use `vX.Y.Z` tags for npm releases. `X.Y.Z` must exactly match `cli/package.json` `version`; the workflow validates that match before publishing with `npm publish --access public`. Configure npm trusted publishing for GitHub Actions with owner `samchung95`, repository `ralph-cli`, workflow filename `npm-release.yml`, and no environment name unless the workflow is updated to use one.
 
 Use `staging/vX.Y.Z-*` branches for release candidates and package-install testing. The version prefix must match `cli/package.json`, and staging branches run the package checks without publishing to npm.
 
-Both branch types use Node.js 20, install with `npm ci` from `cli/package-lock.json`, then run:
+Release tags and staging branches use Node.js 24, install with `npm ci` from `cli/package-lock.json`, then run:
 
 ```bash
 npm run typecheck
 npm run build
-npm run test:init
+npm test
 npm run pack:dry-run
 ```
 
