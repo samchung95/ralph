@@ -21,6 +21,7 @@ test("copilot auto-approve runs close stdin so prompt-mode agents can exit", asy
       ["run", "1", "--tool", "copilot", "--auto-approve", "--dir", dir],
       {
         PATH: `${fakeBinDir}${delimiter}${process.env.PATH ?? ""}`,
+        RALPH_HOME: join(dir, "ralph-home"),
       }
     );
 

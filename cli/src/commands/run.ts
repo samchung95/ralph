@@ -3,6 +3,14 @@ import { log } from "../utils/log.js";
 import { fileExists, readText, writeText, getPackageDir, removePathIfExists } from "../utils/files.js";
 import { exec, commandExists } from "../utils/exec.js";
 import { readConfig } from "../utils/config.js";
+import {
+  createAttemptArtifacts,
+  ensureRunArtifacts,
+  finalizeAttemptArtifacts,
+  recordAttemptInvocation,
+  type RunArtifactContext,
+  type AttemptArtifacts,
+} from "../utils/run-artifacts.js";
 import { normalizeTool, TOOL_NAMES } from "../types.js";
 import { archiveLabelFromBranch, archiveRunFiles } from "../utils/archive.js";
 import { validatePrdFile } from "../utils/prd.js";
@@ -31,7 +39,11 @@ const AGENT_ROLE_NAMES = Object.keys(AGENT_PROMPTS) as AgentRole[];
 interface ToolConfig {
   binary: string;
   runtimePromptFile: string;
-  args: (dangerouslySkipPermissions: boolean, bypass: boolean) => string[];
+  args: (
+    dangerouslySkipPermissions: boolean,
+    bypass: boolean,
+    artifacts?: AttemptArtifacts
+  ) => string[];
 }
 
 const TOOL_CONFIG: Record<Tool, ToolConfig> = {
@@ -66,10 +78,16 @@ const TOOL_CONFIG: Record<Tool, ToolConfig> = {
   codex: {
     binary: "codex",
     runtimePromptFile: "AGENTS.md",
-    args: (_dangerouslySkipPermissions, bypass) =>
-      bypass
-        ? ["exec", "--dangerously-bypass-approvals-and-sandbox", "-"]
-        : ["exec", "--full-auto", "-"],
+    args: (_dangerouslySkipPermissions, bypass, artifacts) => {
+      const args = bypass
+        ? ["exec", "--dangerously-bypass-approvals-and-sandbox"]
+        : ["exec", "--full-auto"];
+      if (artifacts?.codexLastMessage) {
+        args.push("--output-last-message", artifacts.codexLastMessage);
+      }
+      args.push("-");
+      return args;
+    },
   },
 };
 
@@ -198,6 +216,9 @@ export async function runCommand(
     await writeText(progressPath, initialProgressText(await readProgressSeed(prdPath)));
   }
 
+  const runArtifacts = await ensureRunArtifacts({ prdPath, projectDir: dir });
+  await validatePrdOrExit(prdPath, "run artifact initialization");
+
   // ── Run the loop ──────────────────────────────────────────────────────
   log.header(`Starting Ralph — Tool: ${tool} — Max cycles: ${maxCycles}`);
   if (bypass) {
@@ -227,7 +248,9 @@ export async function runCommand(
       composePrompt(rolePrompts.planner, progressInstructions),
       dangerouslySkipPermissions,
       bypass,
-      copilotAutoApprove
+      copilotAutoApprove,
+      runArtifacts,
+      i
     );
 
     await validatePrdOrExit(prdPath, `planner phase ${i}`);
@@ -251,7 +274,9 @@ export async function runCommand(
       composePrompt(rolePrompts[selectedAgent], progressInstructions),
       dangerouslySkipPermissions,
       bypass,
-      copilotAutoApprove
+      copilotAutoApprove,
+      runArtifacts,
+      i
     );
 
     if (hasCompletionSignalLine(agentResult)) {
@@ -291,25 +316,36 @@ async function runRole(
   prompt: string,
   dangerouslySkipPermissions: boolean,
   bypass: boolean,
-  copilotAutoApprove: boolean
+  copilotAutoApprove: boolean,
+  runArtifacts: RunArtifactContext,
+  cycle: number
 ): Promise<string> {
   const toolConfig = TOOL_CONFIG[tool];
   const runtimePromptPath = join(dir, toolConfig.runtimePromptFile);
+  const attempt = await createAttemptArtifacts(runArtifacts, { cycle, role, tool });
 
   const previousContent = (await fileExists(runtimePromptPath))
     ? await readText(runtimePromptPath)
     : null;
 
   await writeText(runtimePromptPath, prompt);
+  await writeText(attempt.artifacts.prompt, prompt);
   log.info(
     `Loaded ${ROLE_PROMPTS[role]} + ${PROGRESS_INSTRUCTIONS_PROMPT} into ${toolConfig.runtimePromptFile}`
   );
 
-  let result: { stdout: string; stderr: string };
+  const args = toolConfig.args(dangerouslySkipPermissions, bypass, attempt.artifacts);
+  await recordAttemptInvocation(attempt, {
+    command: toolConfig.binary,
+    args,
+  });
+
+  let result: { stdout: string; stderr: string; exitCode: number; completionSource: string };
+  const codexLastMessage = attempt.artifacts.codexLastMessage;
   try {
     result = await exec(
       toolConfig.binary,
-      toolConfig.args(dangerouslySkipPermissions, bypass),
+      args,
       {
         cwd: dir,
         stdin: tool === "copilot" ? undefined : prompt,
@@ -320,8 +356,29 @@ async function runRole(
                 label: "Copilot",
               }
             : undefined,
+        stdoutPath: attempt.artifacts.stdout,
+        stderrPath: attempt.artifacts.stderr,
+        completion:
+          tool === "codex" && codexLastMessage
+            ? {
+                isComplete: async () =>
+                  (await fileExists(codexLastMessage)) &&
+                  (await roleReachedDurableCompletion(runArtifacts.prdPath, role)),
+                source: "codex-last-message+prd-state",
+              }
+            : undefined,
       }
     );
+    await finalizeAttemptArtifacts(attempt, {
+      exitCode: result.exitCode,
+      completionSource: result.completionSource,
+    });
+  } catch (error) {
+    await finalizeAttemptArtifacts(attempt, {
+      error,
+      completionSource: "process-error",
+    });
+    throw error;
   } finally {
     await restoreOrRemovePromptFile(runtimePromptPath, previousContent);
   }
@@ -339,6 +396,35 @@ async function warnIfMissingFinalSuccessCriteria(prdPath: string): Promise<void>
     }
   } catch {
     log.warn("Could not parse prd.json. The agent will need to fix it before continuing.");
+  }
+}
+
+async function roleReachedDurableCompletion(prdPath: string, role: RunRole): Promise<boolean> {
+  try {
+    const prd = JSON.parse(await readText(prdPath)) as {
+      finalSuccessCriteria?: { passes?: boolean };
+      planning?: {
+        activeHandoff?: {
+          agent?: string;
+          status?: string;
+        };
+      };
+    };
+
+    if (role === "planner") {
+      if (prd.finalSuccessCriteria?.passes === true) {
+        return true;
+      }
+      const handoff = prd.planning?.activeHandoff;
+      return Boolean(
+        handoff?.agent && isAgentRole(handoff.agent) && handoff.status === "ready"
+      );
+    }
+
+    const status = prd.planning?.activeHandoff?.status;
+    return status === "complete" || status === "blocked";
+  } catch {
+    return false;
   }
 }
 

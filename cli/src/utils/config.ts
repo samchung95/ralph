@@ -13,7 +13,11 @@ const DEFAULT_CONFIG: RalphConfig = {
 };
 
 export function getConfigPath(): string {
-  return join(homedir(), ".ralph-cli", "config.json");
+  return join(getRalphHomePath(), "config.json");
+}
+
+export function getRalphHomePath(): string {
+  return process.env.RALPH_HOME || join(homedir(), ".ralph-cli");
 }
 
 export async function readConfig(): Promise<RalphConfig> {

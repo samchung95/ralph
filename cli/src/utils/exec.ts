@@ -1,9 +1,11 @@
 import { spawn } from "child_process";
+import { createWriteStream, type WriteStream } from "fs";
 
 export interface ExecResult {
   stdout: string;
   stderr: string;
   exitCode: number;
+  completionSource: string;
 }
 
 export interface AutoApproveOptions {
@@ -33,6 +35,14 @@ export function exec(
     stdin?: string;
     silent?: boolean;
     autoApprove?: AutoApproveOptions;
+    stdoutPath?: string;
+    stderrPath?: string;
+    completion?: {
+      isComplete: () => Promise<boolean>;
+      pollMs?: number;
+      graceMs?: number;
+      source?: string;
+    };
   }
 ): Promise<ExecResult> {
   return new Promise((resolve, reject) => {
@@ -47,6 +57,44 @@ export function exec(
     let stderr = "";
     let recentOutput = "";
     let lastApprovalAt = 0;
+    let settled = false;
+    let childExitCode: number | undefined;
+    let pollingCompletion = false;
+    let completionDetectedSource: string | undefined;
+    let completionGraceTimer: ReturnType<typeof setTimeout> | undefined;
+    let completionPollTimer: ReturnType<typeof setInterval> | undefined;
+    const stdoutLog = options?.stdoutPath ? createWriteStream(options.stdoutPath, { flags: "a" }) : undefined;
+    const stderrLog = options?.stderrPath ? createWriteStream(options.stderrPath, { flags: "a" }) : undefined;
+
+    const finish = async (exitCode: number, completionSource: string) => {
+      if (settled) return;
+      settled = true;
+      if (completionPollTimer) clearInterval(completionPollTimer);
+      if (completionGraceTimer) clearTimeout(completionGraceTimer);
+      await closeLogStreams(stdoutLog, stderrLog);
+      resolve({
+        stdout,
+        stderr,
+        exitCode,
+        completionSource,
+      });
+    };
+
+    const finishFromCompletion = () => {
+      const completion = options?.completion;
+      if (!completion || settled || completionGraceTimer) return;
+      completionDetectedSource = completion.source ?? "completion-check";
+
+      completionGraceTimer = setTimeout(() => {
+        void terminateProcessTree(child.pid, () => {
+          if (!child.killed) {
+            child.kill();
+          }
+        }).finally(() => {
+          void finish(0, completionDetectedSource ?? "completion-check");
+        });
+      }, completion.graceMs ?? 1500);
+    };
 
     const writeAutoApproveInputs = () => {
       for (const input of options?.autoApprove?.inputs ?? DEFAULT_APPROVAL_INPUTS) {
@@ -76,8 +124,10 @@ export function exec(
     };
 
     child.stdout?.on("data", (data: Buffer) => {
+      if (settled) return;
       const text = data.toString();
       stdout += text;
+      stdoutLog?.write(text);
       maybeAutoApprove(text);
       if (!options?.silent) {
         process.stdout.write(text);
@@ -85,8 +135,10 @@ export function exec(
     });
 
     child.stderr?.on("data", (data: Buffer) => {
+      if (settled) return;
       const text = data.toString();
       stderr += text;
+      stderrLog?.write(text);
       maybeAutoApprove(text);
       if (!options?.silent) {
         process.stderr.write(text);
@@ -103,16 +155,78 @@ export function exec(
       child.stdin.end();
     }
 
-    child.on("error", (err) => {
+    child.on("error", async (err) => {
+      if (settled) return;
+      settled = true;
+      if (completionPollTimer) clearInterval(completionPollTimer);
+      if (completionGraceTimer) clearTimeout(completionGraceTimer);
+      await closeLogStreams(stdoutLog, stderrLog);
       reject(err);
     });
 
+    child.on("exit", (code) => {
+      childExitCode = code ?? 1;
+    });
+
     child.on("close", (code) => {
-      resolve({
-        stdout,
-        stderr,
-        exitCode: code ?? 1,
-      });
+      if (completionDetectedSource) {
+        void finish(code === 0 ? 0 : 0, completionDetectedSource);
+        return;
+      }
+      void finish(code ?? 1, "process-close");
+    });
+
+    if (options?.completion) {
+      completionPollTimer = setInterval(() => {
+        if (pollingCompletion || settled) return;
+        pollingCompletion = true;
+        void options.completion
+          ?.isComplete()
+          .then((complete) => {
+            if (complete) {
+              finishFromCompletion();
+            }
+          })
+          .finally(() => {
+            pollingCompletion = false;
+          });
+      }, options.completion.pollMs ?? 500);
+    }
+  });
+}
+
+function closeLogStreams(...streams: Array<WriteStream | undefined>): Promise<void[]> {
+  return Promise.all(
+    streams.map(
+      (stream) =>
+        new Promise<void>((resolve) => {
+          if (!stream) {
+            resolve();
+            return;
+          }
+          stream.end(resolve);
+        })
+    )
+  );
+}
+
+function terminateProcessTree(pid: number | undefined, fallback: () => void): Promise<void> {
+  if (!pid || process.platform !== "win32") {
+    fallback();
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const killer = spawn("taskkill", ["/pid", String(pid), "/T", "/F"], {
+      stdio: "ignore",
+      windowsHide: true,
+    });
+    killer.on("error", () => {
+      fallback();
+      resolve();
+    });
+    killer.on("close", () => {
+      resolve();
     });
   });
 }

@@ -135,6 +135,7 @@ Options:
 4. Initializes `progress.txt` if it doesn't exist
 5. For each cycle:
    - Validates `prd.json` before the planner phase starts
+   - Ensures `prd.json` has a generated `run.id` and creates a centralized attempt artifact folder under `~/.ralph-cli/runs/<run.id>/attempts/<attempt-id>/`
    - Loads `PLANNER.md` plus `PROGRESS_INSTRUCT.md` and runs a planner agent
    - Validates `prd.json` after the planner phase
    - Stops if the planner marks `finalSuccessCriteria.passes: true` or emits `<promise>COMPLETE</promise>` with passing criteria
@@ -144,6 +145,8 @@ Options:
 6. If max cycles are reached without completion, exits with error
 
 If an agent leaves the PRD in an invalid shape at any checkpoint, the run stops immediately instead of continuing with a broken plan state.
+
+Each role invocation records `metadata.json`, `prompt.md`, `stdout.log`, and `stderr.log` in its attempt folder. Codex runs also receive `--output-last-message <attempt-id>-codex-last-message.txt`, so the final Codex response is captured in a collision-resistant central path even when multiple runs use the same project directory. If that final-message file exists and `prd.json` shows the role reached its expected durable state, Ralph can finish the phase even if the Codex wrapper process does not close cleanly.
 
 ### `ralph validate`
 

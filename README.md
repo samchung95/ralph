@@ -317,6 +317,8 @@ Each planner or selected-agent phase spawns a **new AI instance** (Amp, Claude C
 - `progress.txt` (learnings and context)
 - `prd.json` (active handoff, PRD chain, and final success criteria)
 
+When `ralph run` starts, Ralph adds a generated `run.id` to `prd.json` if one is missing. Every planner or selected-agent invocation then writes centralized artifacts to `~/.ralph-cli/runs/<run.id>/attempts/<attempt-id>/`, including `metadata.json`, `prompt.md`, `stdout.log`, and `stderr.log`. Codex attempts also use `--output-last-message` to save the final response as `<attempt-id>-codex-last-message.txt`; Ralph can use that file plus valid `prd.json` phase state to finish a phase when the Codex wrapper process does not close cleanly.
+
 ### Evolving PRDs
 
 Ralph no longer needs a fully preplanned backlog. The first `prd.json` contains a global `finalSuccessCriteria` and planner context expanded from the user's prompt. Each planner pass checks the work so far. If the final criteria are not met, it writes the next focused `planning.activeHandoff` and records the chain in `prdChain`.
