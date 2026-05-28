@@ -52,7 +52,7 @@ ralph fix                  # Clean stale Ralph artifacts and repair prd.json whe
 
 ### `ralph init`
 
-Creates `progress.txt` and a template `prd.json` in your project root. The PRD is copied from Ralph's bundled `prd.json.example` so agents can see the exact expected structure before replacing the example values with your feature's real final success criteria and planner context.
+Creates `progress.txt` and a template `prd.json` in your project root. The PRD is copied from Ralph's bundled `prd.json.example` so agents can see the exact expected structure before replacing the example values with your feature's real final success criteria, repo-style `branchName`, future pull request title metadata, and planner context. If you give the setup skill an explicit branch name or pull request title, it records that value; otherwise it infers names from the repo style and current task.
 
 Role prompt files (`PLANNER.md`, `DEVELOPER.md`, `UXUI.md`, `DOCUMENTATION.md`, `WEB_BROWSER_SAFE.md`, `WEB_BROWSER_BYPASS.md`, `DOCTOR.md`) and `PROGRESS_INSTRUCT.md` stay bundled in the Ralph package, so they no longer need to live in your project root.
 
@@ -160,7 +160,7 @@ ralph validate -d path/to/project
 
 ### `ralph reset`
 
-Archives the current `prd.json` and `progress.txt` into `archive/<timestamp>-<branch>/`, restores `prd.json` from `prd.json.example`, resets `progress.txt`, and clears `.last-branch` so you can author a fresh PRD before the next run.
+Archives the current `prd.json` and `progress.txt` into `archive/<timestamp>-<branch-slug>/`, restores `prd.json` from `prd.json.example`, resets `progress.txt`, and clears `.last-branch` so you can author a fresh PRD before the next run.
 
 ```bash
 ralph reset

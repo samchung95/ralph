@@ -25,9 +25,10 @@ The setup skill should protect existing run state first, expand the user's rough
 2. Understand and, when useful, expand the feature or outcome the user wants.
 3. Ask only essential clarifying and scope-expansion questions.
 4. Research how to phrase specific, explicit success criteria for every selected scope item.
-5. Create or update `prd.json` directly in the Ralph directory.
-6. Create or reset `progress.txt` for the new run.
-7. Do not implement product code.
+5. Choose repo-style naming for `branchName` and the future pull request title, preserving explicit user-provided names when present.
+6. Create or update `prd.json` directly in the Ralph directory.
+7. Create or reset `progress.txt` for the new run.
+8. Do not implement product code.
 
 ---
 
@@ -64,6 +65,7 @@ If the user's request is rough, convert it into:
 - Success-criteria research: local files, commands, standards, docs, or existing patterns used to phrase explicit criteria.
 - Final success criteria: concrete, verifiable global completion criteria.
 - First planner objective: what the planner should decide first.
+- Naming: `branchName` plus `planning.naming.pullRequestTitle`, using explicit user-provided names when present and otherwise inferring the repo style from local conventions.
 
 Ask 3-5 questions only when needed. Include one concise scope-expansion Q&A unless the user already answered it. Focus on:
 
@@ -73,8 +75,19 @@ Ask 3-5 questions only when needed. Include one concise scope-expansion Q&A unle
 - Agent needs: Does this likely need developer, UXUI, documentation, web browsing, authenticated browser actions, or multiple agents?
 - Verification: What checks prove the work is correct?
 - UI/browser needs: Does this require visual verification?
+- Naming: Did the user provide an explicit branch name or pull request title? If not, infer both from git history, contribution docs, current branch naming, and the task.
 
 If the user's request already has enough detail and supporting scope is clear, create the files without asking more.
+
+## Branch And Pull Request Naming
+
+Choose names for both the git branch and a future pull request during PRD creation:
+
+1. If the user provides an explicit branch name, use it exactly unless it is invalid for git or conflicts with a clear repo rule.
+2. If the user provides an explicit pull request title, use it exactly unless it is empty or clearly malformed.
+3. If either name is not provided, inspect local repo conventions such as recent branch names, recent commit messages, contribution docs, package scripts, issue references, and existing PR/title patterns when available.
+4. Do not prefix branch names or pull request titles with `ralph` unless the repository already uses that convention or the user explicitly asks for it.
+5. Record the selected future pull request title and short rationale in `planning.naming`.
 
 ---
 
@@ -118,7 +131,7 @@ Write valid JSON:
 ```json
 {
   "project": "[Project Name]",
-  "branchName": "ralph/[feature-name-kebab-case]",
+  "branchName": "[repo-style-branch-name]",
   "description": "[Planner-routed Ralph run description]",
   "finalSuccessCriteria": {
     "description": "[Global outcome for the whole run]",
@@ -144,6 +157,11 @@ Write valid JSON:
         "successCriteriaResearch": ["Research note used to phrase criteria"]
       },
       "suggestedAgents": ["developer", "uxui", "documentation", "WEB_BROWSER_SAFE", "WEB_BROWSER_BYPASS"]
+    },
+    "naming": {
+      "branchNameRationale": "[Explicit user-provided branch name, or repo evidence used to infer it]",
+      "pullRequestTitle": "[Explicit user-provided pull request title, or repo-style title inferred from the task]",
+      "pullRequestTitleRationale": "[Explicit user-provided pull request title, or repo evidence used to infer it]"
     }
   },
   "prdChain": [
@@ -191,6 +209,8 @@ Allowed `activeHandoff.agent` values are `"developer"`, `"uxui"`, `"documentatio
 - Include selected supporting scopes in `finalSuccessCriteria.acceptanceCriteria`; keep declined supporting scopes out of the run.
 - Preserve useful success-criteria research notes in `planning.promptExpansion`.
 - Use `planning.promptExpansion` to preserve useful interpretation of the user's rough prompt.
+- Use `planning.naming` to preserve the future pull request title and the rationale for branch/title choices.
+- Do not prefix branch names or pull request titles with `ralph` unless that matches repo convention or the user explicitly asks for it.
 - Let the first runtime planner decide the first agent handoff.
 
 ---
@@ -249,7 +269,7 @@ Initial `prd.json`:
 ```json
 {
   "project": "TaskApp",
-  "branchName": "ralph/task-priority",
+  "branchName": "feat/task-priority",
   "description": "Task Priority System - planner-routed Ralph run",
   "finalSuccessCriteria": {
     "description": "Users can assign, view, edit, and filter task priority across the app, with priority persisted and relevant usage documentation updated.",
@@ -301,6 +321,11 @@ Initial `prd.json`:
         "uxui",
         "documentation"
       ]
+    },
+    "naming": {
+      "branchNameRationale": "Inferred from common feature branch style for task-scoped product changes.",
+      "pullRequestTitle": "Add task priority filtering",
+      "pullRequestTitleRationale": "Imperative product-focused title inferred from the requested feature."
     }
   },
   "prdChain": [
@@ -332,6 +357,8 @@ Before finishing:
 - [ ] `planning.cycle` is `1`.
 - [ ] `planning.currentObjective` starts with planner handoff selection.
 - [ ] `planning.promptExpansion` captures useful intent, scope, assumptions, and suggested agents.
+- [ ] `branchName` and `planning.naming.pullRequestTitle` use explicit user-provided names when given, otherwise repo-style inferred names.
+- [ ] Branch names and pull request titles are not prefixed with `ralph` unless the repo or user explicitly requires it.
 - [ ] `prdChain` has one active cycle 1 entry.
 - [ ] `userStories` is an array, usually empty at setup.
 - [ ] `progress.txt` exists and uses the compact shared-memory format.

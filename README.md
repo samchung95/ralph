@@ -162,7 +162,7 @@ Use the Ralph skill to replace the generated template values in the initial evol
 Load the ralph skill and update prd.json for [your feature description]
 ```
 
-Answer any clarifying questions. The skill expands your rough prompt into `finalSuccessCriteria`, planner context, and a compact `progress.txt`. Ralph starts with the planner, which writes `planning.activeHandoff` and chooses the first agent.
+Answer any clarifying questions. The skill expands your rough prompt into `finalSuccessCriteria`, planner context, repo-style `branchName`, future PR title metadata in `planning.naming`, and a compact `progress.txt`. If you provide an explicit branch name or pull request title, the skill records that value; otherwise it infers names from the repo style and current task. Ralph starts with the planner, which writes `planning.activeHandoff` and chooses the first agent.
 
 ### 2. Run Ralph
 
@@ -218,7 +218,7 @@ With the copied shell script:
 Default is 10 cycles. Use `--tool amp`, `--tool claude`, `--tool copilot`, or `--tool codex` to select your AI coding tool.
 
 Ralph will:
-1. Create a feature branch (from PRD `branchName`)
+1. Create or check out the repo-style feature branch from PRD `branchName`
 2. Run a planner phase from `PLANNER.md`
 3. Let the planner check `finalSuccessCriteria`
 4. If success criteria pass, output `<promise>COMPLETE</promise>`
@@ -287,7 +287,7 @@ GitHub dependency installs use the repository root `package.json` wrapper. Its `
 | `prompt.md` | Runtime prompt file generated for Amp |
 | `CLAUDE.md` | Runtime prompt file generated for Claude Code |
 | `AGENTS.md` | Runtime prompt file generated for GitHub Copilot CLI and ChatGPT Codex |
-| `prd.json` | Evolving PRD chain with `finalSuccessCriteria`, active handoff, and planning metadata |
+| `prd.json` | Evolving PRD chain with `finalSuccessCriteria`, active handoff, branch/PR naming, and planning metadata |
 | `prd.json.example` | Example evolving PRD format for reference |
 | `progress.txt` | Compact shared memory plus meaningful per-cycle notes for fresh agents |
 | `skills/ralph/` | Skill for setting up the initial evolving PRD chain (works with Amp, Claude Code, GitHub Copilot CLI, and ChatGPT Codex) |
@@ -389,7 +389,7 @@ If you're using the copied shell script with project-local role prompts, customi
 
 ## Archiving
 
-Ralph automatically archives previous runs when you start a new feature (different `branchName`). Archives are saved to `archive/<timestamp>-feature-name/`.
+Ralph automatically archives previous runs when you start a new feature (different `branchName`). Archives are saved to `archive/<timestamp>-branch-slug/`.
 
 ## References
 

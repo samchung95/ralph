@@ -27,7 +27,7 @@ Read these first:
 ```json
 {
   "project": "Project name",
-  "branchName": "ralph/feature-name",
+  "branchName": "repo-style-branch-name",
   "description": "Current Ralph run description",
   "finalSuccessCriteria": {
     "description": "The global outcome Ralph is working toward",
@@ -44,6 +44,11 @@ Read these first:
       "outOfScope": ["Excluded item"],
       "assumptions": ["Assumption"],
       "suggestedAgents": ["developer", "uxui"]
+    },
+    "naming": {
+      "branchNameRationale": "Explicit user-provided branch name, or repo evidence used to infer it",
+      "pullRequestTitle": "Repo-style future pull request title",
+      "pullRequestTitleRationale": "Explicit user-provided title, or repo evidence used to infer it"
     },
     "activeHandoff": {
       "agent": "developer",
@@ -72,6 +77,13 @@ Read these first:
 ```
 
 If older PRD files are missing `finalSuccessCriteria`, `planning`, or `prdChain`, migrate them in place before assigning the next handoff. If they still use `userStories` as the active work queue, convert the next useful story into `planning.activeHandoff`. If `planning.promptExpansion` exists, use it as setup context rather than treating it as a required output field.
+
+## Naming Rules
+
+- Preserve `branchName` and `planning.naming.pullRequestTitle` when setup already chose them.
+- If an older PRD is missing `planning.naming`, infer a future pull request title from repo conventions and the current task, then add `planning.naming`.
+- Use explicit user-provided branch names and pull request titles when the PRD records them.
+- Do not prefix branch names or pull request titles with `ralph` unless the repository already uses that convention or the user explicitly asked for it.
 
 ## Planning Loop
 

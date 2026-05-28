@@ -29,6 +29,20 @@ test("init creates progress.txt and prd.json from the bundled template", async (
   }
 });
 
+test("bundled PRD template seeds repo-style branch and PR naming metadata", async () => {
+  const template = JSON.parse(await readFile(templatePath, "utf8"));
+
+  assert.equal(typeof template.branchName, "string");
+  assert.doesNotMatch(template.branchName, /^ralph\//);
+  assert.equal(typeof template.planning.naming, "object");
+  assert.equal(typeof template.planning.naming.pullRequestTitle, "string");
+  assert.doesNotMatch(template.planning.naming.pullRequestTitle, /^ralph\b/i);
+  assert.match(
+    template.planning.naming.branchNameRationale,
+    /repo/i
+  );
+});
+
 test("init preserves an existing prd.json unless force is used", async () => {
   const dir = await mkdtemp(join(tmpdir(), "ralph-init-"));
   const customPrd = "{\n  \"custom\": true\n}\n";

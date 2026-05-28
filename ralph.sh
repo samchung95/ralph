@@ -110,7 +110,7 @@ EOF
 
 archive_label_from_branch() {
   local branch="$1"
-  local label="${branch#ralph/}"
+  local label="$branch"
   label=$(printf '%s' "$label" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
   if [ -z "$label" ]; then
     label="run"

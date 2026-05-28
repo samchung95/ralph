@@ -19,7 +19,7 @@ export async function archiveRunFiles(
 }
 
 export function archiveLabelFromBranch(branchName: string | undefined | null): string {
-  return slugifyArchiveLabel(branchName?.replace(/^ralph\//, "") || "run");
+  return slugifyArchiveLabel(branchName || "run");
 }
 
 async function createArchiveDir(dir: string, label: string): Promise<string> {

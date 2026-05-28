@@ -1,7 +1,7 @@
 {
   "title": "TEMPLATE PRD CANVAS - replace all example values before running Ralph",
   "project": "TEMPLATE PROJECT - replace with your project name",
-  "branchName": "ralph/task-priority",
+  "branchName": "feat/task-priority",
   "description": "TEMPLATE PRD - Task Priority System example for a planner-routed Ralph run",
   "finalSuccessCriteria": {
     "description": "Users can assign, view, edit, and filter task priority across the app, with priority persisted between sessions and documented where relevant.",
@@ -53,6 +53,11 @@
         "uxui",
         "documentation"
       ]
+    },
+    "naming": {
+      "branchNameRationale": "Uses an explicit user-provided branch name when given; otherwise follows the repo's feature branch style.",
+      "pullRequestTitle": "Add task priority filtering",
+      "pullRequestTitleRationale": "Uses an explicit user-provided pull request title when given; otherwise follows the repo's PR title style."
     },
     "activeHandoff": {
       "agent": "developer",
