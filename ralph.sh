@@ -240,6 +240,7 @@ validate_prd_json() {
   local context="$1"
 
   if jq -e '
+    . as $root |
     type == "object" and
     (.project | type == "string") and
     (.branchName | type == "string") and
@@ -247,6 +248,41 @@ validate_prd_json() {
     (.finalSuccessCriteria | type == "object") and
     (.finalSuccessCriteria.description | type == "string") and
     (.finalSuccessCriteria.acceptanceCriteria | type == "array" and all(.[]; type == "string")) and
+    (
+      (.finalSuccessCriteria.acceptanceCriteria | length <= 5) or
+      (
+        (.finalSuccessCriteria.acceptanceCriteriaBundles | type == "array") and
+        (.finalSuccessCriteria.acceptanceCriteriaBundles | length >= 1)
+      )
+    ) and
+    (
+      (.finalSuccessCriteria.acceptanceCriteriaBundles == null) or
+      (
+        (.finalSuccessCriteria.acceptanceCriteriaBundles | type == "array") and
+        (all(.finalSuccessCriteria.acceptanceCriteriaBundles[];
+          type == "object" and
+          (.id | type == "string") and
+          (.title | type == "string") and
+          (.acceptanceCriteria | type == "array" and all(.[]; type == "string")) and
+          (.storyIds | type == "array" and all(.[]; type == "string")) and
+          (.status as $status | ["pending", "active", "passed", "deferred", "blocked"] | index($status) != null) and
+          (.notes | type == "string") and
+          (all(.storyIds[]; . as $storyId | any($root.userStories[]; .id == $storyId))) and
+          (
+            .status != "passed" or
+            (
+              (.storyIds | length >= 1) and
+              (all(.storyIds[]; . as $storyId | any($root.userStories[]; .id == $storyId and .passes == true)))
+            )
+          )
+        ))
+      )
+    ) and
+    (
+      (.finalSuccessCriteria.passes != true) or
+      (.finalSuccessCriteria.acceptanceCriteriaBundles == null) or
+      (all(.finalSuccessCriteria.acceptanceCriteriaBundles[]; .status == "passed" or .status == "deferred"))
+    ) and
     (.finalSuccessCriteria.passes | type == "boolean") and
     (.finalSuccessCriteria.notes | type == "string") and
     (.planning | type == "object") and

@@ -52,7 +52,7 @@ ralph fix                  # Clean stale Ralph artifacts and repair prd.json whe
 
 ### `ralph init`
 
-Creates `progress.txt` and a template `prd.json` in your project root. The PRD is copied from Ralph's bundled `prd.json.example` so agents can see the exact expected structure before replacing the example values with your feature's real final success criteria, repo-style `branchName`, future pull request title metadata, and planner context. If you give the setup skill an explicit branch name or pull request title, it records that value; otherwise it infers names from the repo style and current task.
+Creates `progress.txt` and a template `prd.json` in your project root. The PRD is copied from Ralph's bundled `prd.json.example` so agents can see the exact expected structure before replacing the example values with your feature's real final success criteria, acceptance criteria bundles when there are more than five final criteria, repo-style `branchName`, future pull request title metadata, and planner context. If you give the setup skill an explicit branch name or pull request title, it records that value; otherwise it infers names from the repo style and current task.
 
 Role prompt files (`PLANNER.md`, `DEVELOPER.md`, `UXUI.md`, `DOCUMENTATION.md`, `WEB_BROWSER_SAFE.md`, `WEB_BROWSER_BYPASS.md`, `DOCTOR.md`) and `PROGRESS_INSTRUCT.md` stay bundled in the Ralph package, so they no longer need to live in your project root.
 
@@ -146,6 +146,8 @@ Options:
 6. If max cycles are reached without completion, exits with error
 
 If an agent leaves the PRD in an invalid shape at any checkpoint, the run stops immediately instead of continuing with a broken plan state.
+
+When `finalSuccessCriteria.acceptanceCriteria` has more than five items, Ralph requires `finalSuccessCriteria.acceptanceCriteriaBundles`. The run can finish only when every bundle is `passed` or `deferred`; `passed` requires at least one referenced user story and every referenced story must have `passes: true`.
 
 Each role invocation records `metadata.json`, `prompt.md`, `stdout.log`, and `stderr.log` in its attempt folder. Codex runs also receive `--output-last-message <attempt-id>-codex-last-message.txt`, so the final Codex response is captured in a collision-resistant central path even when multiple runs use the same project directory. If that final-message file exists and `prd.json` shows the role reached its expected durable state, Ralph can finish the phase even if the Codex wrapper process does not close cleanly.
 

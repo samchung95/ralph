@@ -18,6 +18,13 @@ A valid `prd.json` must contain:
 - `finalSuccessCriteria` (object) with:
   - `description` (string)
   - `acceptanceCriteria` (array of strings)
+  - optional `acceptanceCriteriaBundles` (array, required when `acceptanceCriteria` has more than 5 items), each with:
+    - `id` (string, unique)
+    - `title` (string)
+    - `acceptanceCriteria` (array of strings)
+    - `storyIds` (array of strings referencing `userStories`)
+    - `status` (one of: `"pending"`, `"active"`, `"passed"`, `"deferred"`, `"blocked"`)
+    - `notes` (string)
   - `passes` (boolean)
   - `notes` (string)
 - `planning` (object) with:
@@ -53,6 +60,10 @@ Cross-field rules:
 - At most one `prdChain` entry may have `status: "active"`.
 - The active `prdChain` entry's `cycle` must match `planning.cycle`.
 - Every `storyId` in the active `prdChain` entry must exist in `userStories`.
+- `acceptanceCriteriaBundles` is required when `finalSuccessCriteria.acceptanceCriteria` has more than 5 items.
+- Every `storyId` in an acceptance criteria bundle must exist in `userStories`.
+- A bundle `status` cannot be `"passed"` unless it references at least one `userStories` item and all referenced stories have `passes: true`.
+- `finalSuccessCriteria.passes` cannot be `true` unless every acceptance criteria bundle has status `"passed"` or `"deferred"`.
 
 ## Steps
 

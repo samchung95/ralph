@@ -64,6 +64,7 @@ If the user's request is rough, convert it into:
 - Supporting process scope: whether to include documentation, security checks, cleanup, refactor, tests, accessibility, performance, release notes, migration/backward compatibility, or other post-dev work.
 - Success-criteria research: local files, commands, standards, docs, or existing patterns used to phrase explicit criteria.
 - Final success criteria: concrete, verifiable global completion criteria.
+- Acceptance criteria bundles: when there are more than 5 final criteria, group them into focused bundles that can be evaluated separately.
 - First planner objective: what the planner should decide first.
 - Naming: `branchName` plus `planning.naming.pullRequestTitle`, using explicit user-provided names when present and otherwise inferring the repo style from local conventions.
 
@@ -88,6 +89,21 @@ Choose names for both the git branch and a future pull request during PRD creati
 3. If either name is not provided, inspect local repo conventions such as recent branch names, recent commit messages, contribution docs, package scripts, issue references, and existing PR/title patterns when available.
 4. Do not prefix branch names or pull request titles with `ralph` unless the repository already uses that convention or the user explicitly asks for it.
 5. Record the selected future pull request title and short rationale in `planning.naming`.
+
+---
+
+## Acceptance Criteria Bundles
+
+Use bundles when final acceptance criteria are too large for one planner pass to evaluate safely:
+
+1. If `finalSuccessCriteria.acceptanceCriteria` has more than 5 items, add `finalSuccessCriteria.acceptanceCriteriaBundles`.
+2. Each bundle must include `id`, `title`, `acceptanceCriteria`, `storyIds`, `status`, and `notes`.
+3. Bundle `status` must be `"pending"`, `"active"`, `"passed"`, `"deferred"`, or `"blocked"`.
+4. Set a bundle to `"passed"` only when it references at least one `userStories` item and every referenced story has `passes: true`.
+5. Use `"deferred"` only when the user or planner explicitly defers that criteria bundle from this run, and record the reason in `notes`.
+6. The whole run can pass only when every required bundle is `"passed"` or `"deferred"`.
+
+If there are 5 or fewer final acceptance criteria, bundles are optional.
 
 ---
 
@@ -139,6 +155,16 @@ Write valid JSON:
       "Final criterion 1",
       "Final criterion 2",
       "Typecheck passes"
+    ],
+    "acceptanceCriteriaBundles": [
+      {
+        "id": "ACB-001",
+        "title": "[Related final criteria]",
+        "acceptanceCriteria": ["Final criterion 1"],
+        "storyIds": ["US-001"],
+        "status": "pending",
+        "notes": ""
+      }
     ],
     "passes": false,
     "notes": ""
@@ -205,6 +231,8 @@ Allowed `activeHandoff.agent` values are `"developer"`, `"uxui"`, `"documentatio
 - Put the whole desired outcome in `finalSuccessCriteria`.
 - Keep setup focused on the global goal and planner context, not a full backlog.
 - Acceptance criteria must be concrete and verifiable.
+- If there are more than 5 final acceptance criteria, group them into `finalSuccessCriteria.acceptanceCriteriaBundles`.
+- A bundle can be marked `passed` only after it references at least one `userStories` item and all referenced stories pass; final success can pass only when every bundle is `passed` or `deferred`.
 - Include checks such as `Typecheck passes`, `Tests pass`, `Browser verification passes`, or `Documentation is updated` when relevant.
 - Include selected supporting scopes in `finalSuccessCriteria.acceptanceCriteria`; keep declined supporting scopes out of the run.
 - Preserve useful success-criteria research notes in `planning.promptExpansion`.
@@ -282,6 +310,44 @@ Initial `prd.json`:
       "Relevant usage documentation is updated",
       "Typecheck passes"
     ],
+    "acceptanceCriteriaBundles": [
+      {
+        "id": "ACB-001",
+        "title": "Priority persistence",
+        "acceptanceCriteria": [
+          "Tasks persist a priority value of high, medium, or low",
+          "Typecheck passes"
+        ],
+        "storyIds": [
+          "US-001"
+        ],
+        "status": "pending",
+        "notes": ""
+      },
+      {
+        "id": "ACB-002",
+        "title": "Priority user workflows",
+        "acceptanceCriteria": [
+          "Users can see priority on task cards without opening details",
+          "Users can edit priority from the task edit flow",
+          "Users can filter the task list by priority",
+          "Priority UI is verified in browser"
+        ],
+        "storyIds": [],
+        "status": "pending",
+        "notes": ""
+      },
+      {
+        "id": "ACB-003",
+        "title": "Documentation",
+        "acceptanceCriteria": [
+          "Relevant usage documentation is updated"
+        ],
+        "storyIds": [],
+        "status": "pending",
+        "notes": ""
+      }
+    ],
     "passes": false,
     "notes": ""
   },
@@ -351,6 +417,7 @@ Before finishing:
 - [ ] `prd.json` is valid JSON.
 - [ ] `finalSuccessCriteria` describes the whole target outcome.
 - [ ] Selected supporting scopes are represented in `finalSuccessCriteria.acceptanceCriteria`.
+- [ ] If `finalSuccessCriteria.acceptanceCriteria` has more than 5 items, `finalSuccessCriteria.acceptanceCriteriaBundles` exists and groups them.
 - [ ] Declined supporting scopes are excluded or recorded as out of scope.
 - [ ] Success criteria are specific, explicit, and backed by local or authoritative research where needed.
 - [ ] `finalSuccessCriteria.passes` is `false`.

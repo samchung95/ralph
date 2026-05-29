@@ -29,6 +29,7 @@ Every 5 minutes, and immediately after visible phase transitions, inspect:
 1. `prd.json`
    - `finalSuccessCriteria.passes`
    - `finalSuccessCriteria.notes`
+   - `finalSuccessCriteria.acceptanceCriteriaBundles` statuses when present
    - `planning.cycle`
    - `planning.currentObjective`
    - `planning.activeHandoff.agent`
@@ -83,9 +84,10 @@ If Ralph reports blocked, preserve the blocker from `progress.txt` and `planning
 When Ralph appears complete:
 
 1. Confirm `finalSuccessCriteria.passes` is `true`.
-2. Read `finalSuccessCriteria.notes` and the latest `progress.txt` entry.
-3. Inspect `git status --short --branch`, `git diff --stat`, and recent commits.
-4. Run `ralph validate` if available.
-5. Summarize the completed criteria, verification evidence, commits/diffs, and any remaining uncommitted changes.
+2. Confirm every `finalSuccessCriteria.acceptanceCriteriaBundles` entry is `passed` or `deferred` when bundles are present.
+3. Read `finalSuccessCriteria.notes` and the latest `progress.txt` entry.
+4. Inspect `git status --short --branch`, `git diff --stat`, and recent commits.
+5. Run `ralph validate` if available.
+6. Summarize the completed criteria, deferred bundles, verification evidence, commits/diffs, and any remaining uncommitted changes.
 
 Stop monitoring once the loop completes, fails, blocks with no authorized next action, reaches max cycles, or the user asks you to stop.

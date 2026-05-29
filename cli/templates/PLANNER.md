@@ -32,6 +32,16 @@ Read these first:
   "finalSuccessCriteria": {
     "description": "The global outcome Ralph is working toward",
     "acceptanceCriteria": ["Verifiable final criterion"],
+    "acceptanceCriteriaBundles": [
+      {
+        "id": "ACB-001",
+        "title": "Related final criteria",
+        "acceptanceCriteria": ["Subset of final criteria"],
+        "storyIds": ["US-001"],
+        "status": "pending",
+        "notes": ""
+      }
+    ],
     "passes": false,
     "notes": ""
   },
@@ -78,6 +88,16 @@ Read these first:
 
 If older PRD files are missing `finalSuccessCriteria`, `planning`, or `prdChain`, migrate them in place before assigning the next handoff. If they still use `userStories` as the active work queue, convert the next useful story into `planning.activeHandoff`. If `planning.promptExpansion` exists, use it as setup context rather than treating it as a required output field.
 
+## Acceptance Criteria Bundle Rules
+
+- If `finalSuccessCriteria.acceptanceCriteria` has more than 5 items, `finalSuccessCriteria.acceptanceCriteriaBundles` is required.
+- Each bundle groups related final criteria and has `id`, `title`, `acceptanceCriteria`, `storyIds`, `status`, and `notes`.
+- Bundle `status` must be one of `"pending"`, `"active"`, `"passed"`, `"deferred"`, or `"blocked"`.
+- Mark a bundle `passed` only when it references at least one `userStories` entry and every referenced story has `passes: true`.
+- Mark a bundle `deferred` only when the criteria are explicitly deferred from this run; explain the deferral in `notes`.
+- Set `finalSuccessCriteria.passes: true` only when every acceptance criteria bundle is `passed` or `deferred`. If no bundles are required because there are 5 or fewer final criteria, evaluate the criteria directly.
+- When migrating a PRD with more than 5 final criteria and no bundles, group the criteria into small coherent bundles before evaluating final success.
+
 ## Naming Rules
 
 - Preserve `branchName` and `planning.naming.pullRequestTitle` when setup already chose them.
@@ -91,6 +111,7 @@ If older PRD files are missing `finalSuccessCriteria`, `planning`, or `prdChain`
 2. If the previous handoff is not complete and is not blocked, do not create unrelated work. Reassign the same agent with clearer rules or notes.
 3. Evaluate the global `finalSuccessCriteria`.
 4. If the final success criteria are met:
+   - Confirm every required acceptance criteria bundle is `passed` or `deferred`.
    - Set `finalSuccessCriteria.passes` to `true`.
    - Add concise evidence to `finalSuccessCriteria.notes`.
    - Mark the active handoff and active `prdChain` item as `complete`.

@@ -13,7 +13,7 @@ import {
 } from "../utils/run-artifacts.js";
 import { normalizeTool, TOOL_NAMES } from "../types.js";
 import { archiveLabelFromBranch, archiveRunFiles } from "../utils/archive.js";
-import { validatePrdFile } from "../utils/prd.js";
+import { validatePrdData, validatePrdFile } from "../utils/prd.js";
 import { initialProgressText } from "../utils/progress.js";
 import type { RunOptions, Tool } from "../types.js";
 
@@ -410,6 +410,9 @@ async function roleReachedDurableCompletion(prdPath: string, role: RunRole): Pro
         };
       };
     };
+    if (!validatePrdData(prd).valid) {
+      return false;
+    }
 
     if (role === "planner") {
       if (prd.finalSuccessCriteria?.passes === true) {
@@ -539,7 +542,7 @@ async function readProgressSeed(prdPath: string): Promise<{
 async function finalSuccessCriteriaPasses(prdPath: string): Promise<boolean> {
   try {
     const prd = JSON.parse(await readText(prdPath));
-    return prd.finalSuccessCriteria?.passes === true;
+    return validatePrdData(prd).valid && prd.finalSuccessCriteria?.passes === true;
   } catch {
     return false;
   }

@@ -167,7 +167,7 @@ Use the Ralph skill to replace the generated template values in the initial evol
 Load the ralph skill and update prd.json for [your feature description]
 ```
 
-Answer any clarifying questions. The skill expands your rough prompt into `finalSuccessCriteria`, planner context, repo-style `branchName`, future PR title metadata in `planning.naming`, and a compact `progress.txt`. If you provide an explicit branch name or pull request title, the skill records that value; otherwise it infers names from the repo style and current task. Ralph starts with the planner, which writes `planning.activeHandoff` and chooses the first agent.
+Answer any clarifying questions. The skill expands your rough prompt into `finalSuccessCriteria`, planner context, repo-style `branchName`, future PR title metadata in `planning.naming`, and a compact `progress.txt`. If you provide an explicit branch name or pull request title, the skill records that value; otherwise it infers names from the repo style and current task. When there are more than five final acceptance criteria, the skill groups them into `finalSuccessCriteria.acceptanceCriteriaBundles` so each bundle can be checked separately. Ralph starts with the planner, which writes `planning.activeHandoff` and chooses the first agent.
 
 Use the `ralph-run` skill when you want an AI agent to start or supervise `ralph run` like a project manager. It checks `prd.json`, `progress.txt`, git status, git diffs, recent commits, and run output every 5 minutes until the loop completes, blocks, fails, or you stop it.
 
@@ -235,6 +235,8 @@ Ralph will:
 8. Return to the planner and repeat
 
 Ralph validates the `prd.json` structure before the run starts, at the start of every cycle, and after every planner or selected-agent phase. If an agent leaves the PRD in an invalid state, the run stops immediately instead of continuing with a broken planning chain.
+
+For larger PRDs, Ralph requires acceptance criteria bundles when `finalSuccessCriteria.acceptanceCriteria` has more than five items. A bundle can be marked `passed` only when it references at least one `userStories` entry and every referenced story has `passes: true`; the whole run can complete only when every bundle is `passed` or explicitly `deferred`.
 
 Use these helper commands with the Node CLI:
 
@@ -329,7 +331,7 @@ When `ralph run` starts, Ralph adds a generated `run.id` to `prd.json` if one is
 
 ### Evolving PRDs
 
-Ralph no longer needs a fully preplanned backlog. The first `prd.json` contains a global `finalSuccessCriteria` and planner context expanded from the user's prompt. Each planner pass checks the work so far. If the final criteria are not met, it writes the next focused `planning.activeHandoff` and records the chain in `prdChain`.
+Ralph no longer needs a fully preplanned backlog. The first `prd.json` contains a global `finalSuccessCriteria` and planner context expanded from the user's prompt. Large final criteria sets are grouped into `acceptanceCriteriaBundles` so the planner can evaluate smaller chunks across user stories. Each planner pass checks the work so far. If the final criteria are not met, it writes the next focused `planning.activeHandoff` and records the chain in `prdChain`.
 
 ### Small Handoffs
 

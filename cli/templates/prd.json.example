@@ -14,6 +14,44 @@
       "Relevant usage documentation is updated",
       "Typecheck passes"
     ],
+    "acceptanceCriteriaBundles": [
+      {
+        "id": "ACB-001",
+        "title": "Priority persistence",
+        "acceptanceCriteria": [
+          "Tasks persist a priority value of high, medium, or low",
+          "Typecheck passes"
+        ],
+        "storyIds": [
+          "US-001"
+        ],
+        "status": "pending",
+        "notes": ""
+      },
+      {
+        "id": "ACB-002",
+        "title": "Priority user workflows",
+        "acceptanceCriteria": [
+          "Users can see priority on task cards without opening details",
+          "Users can edit priority from the task edit flow",
+          "Users can filter the task list by priority",
+          "Priority UI is visually scannable and verified in browser"
+        ],
+        "storyIds": [],
+        "status": "pending",
+        "notes": ""
+      },
+      {
+        "id": "ACB-003",
+        "title": "Documentation",
+        "acceptanceCriteria": [
+          "Relevant usage documentation is updated"
+        ],
+        "storyIds": [],
+        "status": "pending",
+        "notes": ""
+      }
+    ],
     "passes": false,
     "notes": ""
   },

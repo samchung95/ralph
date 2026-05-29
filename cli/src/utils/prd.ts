@@ -15,6 +15,13 @@ const AGENT_ROLES = [
   "WEB_BROWSER_BYPASS",
 ] as const;
 const HANDOFF_STATUSES = ["ready", "active", "complete", "blocked"] as const;
+const ACCEPTANCE_BUNDLE_STATUSES = [
+  "pending",
+  "active",
+  "passed",
+  "deferred",
+  "blocked",
+] as const;
 
 export async function validatePrdFile(prdPath: string): Promise<PrdValidationResult> {
   try {
@@ -47,6 +54,7 @@ export function validatePrdData(data: unknown): PrdValidationResult {
   requireString(data, "branchName", "branchName", errors);
   requireString(data, "description", "description", errors);
 
+  let acceptanceCriteriaBundles: JsonObject[] | null = null;
   const finalSuccessCriteria = requireObject(
     data,
     "finalSuccessCriteria",
@@ -60,7 +68,7 @@ export function validatePrdData(data: unknown): PrdValidationResult {
       "finalSuccessCriteria.description",
       errors
     );
-    requireStringArray(
+    const acceptanceCriteria = requireStringArray(
       finalSuccessCriteria,
       "acceptanceCriteria",
       "finalSuccessCriteria.acceptanceCriteria",
@@ -68,6 +76,25 @@ export function validatePrdData(data: unknown): PrdValidationResult {
     );
     requireBoolean(finalSuccessCriteria, "passes", "finalSuccessCriteria.passes", errors);
     requireString(finalSuccessCriteria, "notes", "finalSuccessCriteria.notes", errors);
+
+    acceptanceCriteriaBundles = optionalObjectArray(
+      finalSuccessCriteria,
+      "acceptanceCriteriaBundles",
+      "finalSuccessCriteria.acceptanceCriteriaBundles",
+      errors
+    );
+    if (acceptanceCriteriaBundles) {
+      validateAcceptanceCriteriaBundlesShape(acceptanceCriteriaBundles, errors);
+    }
+    if (
+      acceptanceCriteria &&
+      acceptanceCriteria.length > 5 &&
+      !acceptanceCriteriaBundles
+    ) {
+      errors.push(
+        "finalSuccessCriteria.acceptanceCriteriaBundles is required when finalSuccessCriteria.acceptanceCriteria has more than 5 items."
+      );
+    }
   }
 
   const planning = requireObject(data, "planning", "planning", errors);
@@ -163,6 +190,7 @@ export function validatePrdData(data: unknown): PrdValidationResult {
 
   const userStories = requireObjectArray(data, "userStories", "userStories", errors);
   const storyIds = new Set<string>();
+  const storyPasses = new Map<string, boolean>();
   if (userStories) {
     userStories.forEach((story, index) => {
       const path = `userStories[${index}]`;
@@ -180,8 +208,21 @@ export function validatePrdData(data: unknown): PrdValidationResult {
       requirePositiveNumber(story, "priority", `${path}.priority`, errors);
       requireStringEnum(story, "storyPriority", ["high", "medium", "low"], `${path}.storyPriority`, errors);
       requireBoolean(story, "passes", `${path}.passes`, errors);
+      if (id && typeof story.passes === "boolean") {
+        storyPasses.set(id, story.passes);
+      }
       requireString(story, "notes", `${path}.notes`, errors);
     });
+  }
+
+  if (finalSuccessCriteria && acceptanceCriteriaBundles) {
+    validateAcceptanceCriteriaBundleState(
+      acceptanceCriteriaBundles,
+      finalSuccessCriteria,
+      storyIds,
+      storyPasses,
+      errors
+    );
   }
 
   if (planning && prdChain) {
@@ -214,6 +255,87 @@ export function validatePrdData(data: unknown): PrdValidationResult {
   }
 
   return { valid: errors.length === 0, errors };
+}
+
+function validateAcceptanceCriteriaBundlesShape(
+  bundles: JsonObject[],
+  errors: string[]
+): void {
+  const bundleIds = new Set<string>();
+
+  if (bundles.length === 0) {
+    errors.push("finalSuccessCriteria.acceptanceCriteriaBundles must contain at least one bundle when present.");
+  }
+
+  bundles.forEach((bundle, index) => {
+    const path = `finalSuccessCriteria.acceptanceCriteriaBundles[${index}]`;
+    const id = requireString(bundle, "id", `${path}.id`, errors);
+    if (id) {
+      if (bundleIds.has(id)) {
+        errors.push(`Duplicate acceptanceCriteriaBundles id '${id}'.`);
+      }
+      bundleIds.add(id);
+    }
+
+    requireString(bundle, "title", `${path}.title`, errors);
+    requireStringArray(bundle, "acceptanceCriteria", `${path}.acceptanceCriteria`, errors);
+    requireStringArray(bundle, "storyIds", `${path}.storyIds`, errors);
+    requireStringEnum(
+      bundle,
+      "status",
+      [...ACCEPTANCE_BUNDLE_STATUSES],
+      `${path}.status`,
+      errors
+    );
+    requireString(bundle, "notes", `${path}.notes`, errors);
+  });
+}
+
+function validateAcceptanceCriteriaBundleState(
+  bundles: JsonObject[],
+  finalSuccessCriteria: JsonObject,
+  storyIds: Set<string>,
+  storyPasses: Map<string, boolean>,
+  errors: string[]
+): void {
+  bundles.forEach((bundle, index) => {
+    const path = `finalSuccessCriteria.acceptanceCriteriaBundles[${index}]`;
+    const bundleStoryIds = Array.isArray(bundle.storyIds)
+      ? bundle.storyIds.filter((storyId): storyId is string => typeof storyId === "string")
+      : [];
+
+    for (const storyId of bundleStoryIds) {
+      if (!storyIds.has(storyId)) {
+        errors.push(`${path}.storyIds references missing userStories id '${storyId}'.`);
+      }
+    }
+
+    if (bundle.status === "passed") {
+      if (bundleStoryIds.length === 0) {
+        errors.push(`${path}.status cannot be "passed" without at least one referenced userStory.`);
+        return;
+      }
+
+      const allStoriesPassed = bundleStoryIds.every(
+        (storyId) => storyPasses.get(storyId) === true
+      );
+      if (!allStoriesPassed) {
+        errors.push(
+          `${path}.status cannot be "passed" until all referenced userStories pass.`
+        );
+      }
+    }
+  });
+
+  if (
+    finalSuccessCriteria.passes === true &&
+    bundles.length > 0 &&
+    bundles.some((bundle) => bundle.status !== "passed" && bundle.status !== "deferred")
+  ) {
+    errors.push(
+      'finalSuccessCriteria.passes cannot be true until every acceptanceCriteriaBundles entry has status "passed" or "deferred".'
+    );
+  }
 }
 
 function isObject(value: unknown): value is JsonObject {
@@ -249,6 +371,34 @@ function optionalObject(
     return null;
   }
   return value;
+}
+
+function optionalObjectArray(
+  parent: JsonObject,
+  key: string,
+  path: string,
+  errors: string[]
+): JsonObject[] | null {
+  const value = parent[key];
+  if (value === undefined) {
+    return null;
+  }
+
+  if (!Array.isArray(value)) {
+    errors.push(`${path} must be an array when present.`);
+    return null;
+  }
+
+  const objects: JsonObject[] = [];
+  value.forEach((item, index) => {
+    if (!isObject(item)) {
+      errors.push(`${path}[${index}] must be an object.`);
+      return;
+    }
+    objects.push(item);
+  });
+
+  return objects;
 }
 
 function requireObjectArray(
