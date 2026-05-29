@@ -32,6 +32,7 @@ const TEMPLATE_FILES = [
   "PROGRESS_INSTRUCT.md",
   "prd.json.example",
   path.join("skills", "ralph", "SKILL.md"),
+  path.join("skills", "ralph-run", "SKILL.md"),
 ];
 
 const LIVE_FILES = ["prd.json", "progress.txt"];

@@ -38,6 +38,8 @@ export async function installCommand(options: InstallOptions): Promise<void> {
   // Read available skills from the templates
   const skills = await readdir(templateDir, { withFileTypes: true });
 
+  const installedSkills: string[] = [];
+
   for (const entry of skills) {
     if (!entry.isDirectory()) continue;
 
@@ -57,11 +59,26 @@ export async function installCommand(options: InstallOptions): Promise<void> {
 
       await copyFileSafe(srcSkillFile, destSkillFile);
       log.success(`Installed skill: ${skillName} → ${destSkillDir}`);
+      installedSkills.push(skillName);
     }
   }
 
   console.log("");
   log.info(`Skills installed to ${skillsDir}`);
-  log.info("Available skill:");
-  log.step("/ralph — Expand the request and set up planner-routed prd.json/progress.txt");
+  log.info("Available skills:");
+  for (const skillName of installedSkills.sort()) {
+    log.step(`/${skillName} — ${skillSummary(skillName)}`);
+  }
+}
+
+function skillSummary(skillName: string): string {
+  if (skillName === "ralph") {
+    return "Expand the request and set up planner-routed prd.json/progress.txt";
+  }
+
+  if (skillName === "ralph-run") {
+    return "Run and monitor Ralph like a project manager";
+  }
+
+  return "Installed Ralph skill";
 }

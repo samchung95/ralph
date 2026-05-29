@@ -40,7 +40,7 @@ program
 
 program
   .command("install")
-  .description("Install the Ralph setup skill into an AI tool's skills directory")
+  .description("Install bundled Ralph skills into an AI tool's skills directory")
   .option(
     "--tool <tool>",
     `AI tool to install skills for (${TOOL_NAMES})`,

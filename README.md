@@ -56,7 +56,7 @@ ralph install --tool copilot
 ralph install --tool codex
 ```
 
-`ralph install` replaces any existing `/ralph` skill folder for the selected tool before installing the bundled copy.
+`ralph install` replaces any existing bundled Ralph skill folders for the selected tool before installing fresh copies.
 
 Codex can optionally run with full access. This setting is remembered:
 
@@ -100,26 +100,30 @@ chmod +x scripts/ralph/ralph.sh
 
 ### Manual Skill Install
 
-If you are not using `ralph install`, copy the setup skill manually:
+If you are not using `ralph install`, copy the setup and run-monitoring skills manually:
 
 For Amp:
 ```bash
 cp -r skills/ralph ~/.config/amp/skills/
+cp -r skills/ralph-run ~/.config/amp/skills/
 ```
 
 For Claude Code:
 ```bash
 cp -r skills/ralph ~/.claude/skills/
+cp -r skills/ralph-run ~/.claude/skills/
 ```
 
 For GitHub Copilot CLI:
 ```bash
 cp -r skills/ralph ~/.copilot/skills/
+cp -r skills/ralph-run ~/.copilot/skills/
 ```
 
 For ChatGPT Codex:
 ```bash
 cp -r skills/ralph ~/.agents/skills/
+cp -r skills/ralph-run ~/.agents/skills/
 ```
 
 ### Claude Code Marketplace
@@ -139,6 +143,7 @@ Then install the skill:
 The skill is automatically invoked when you ask Claude to:
 - "set up ralph", "start ralph", "plan this with ralph"
 - "create prd.json", "prepare the initial ralph step"
+- "run ralph and monitor it", "watch the ralph loop", "check on ralph every 5 minutes"
 
 ### Configure Amp auto-handoff (recommended)
 
@@ -163,6 +168,8 @@ Load the ralph skill and update prd.json for [your feature description]
 ```
 
 Answer any clarifying questions. The skill expands your rough prompt into `finalSuccessCriteria`, planner context, repo-style `branchName`, future PR title metadata in `planning.naming`, and a compact `progress.txt`. If you provide an explicit branch name or pull request title, the skill records that value; otherwise it infers names from the repo style and current task. Ralph starts with the planner, which writes `planning.activeHandoff` and chooses the first agent.
+
+Use the `ralph-run` skill when you want an AI agent to start or supervise `ralph run` like a project manager. It checks `prd.json`, `progress.txt`, git status, git diffs, recent commits, and run output every 5 minutes until the loop completes, blocks, fails, or you stop it.
 
 ### 2. Run Ralph
 
@@ -290,7 +297,8 @@ GitHub dependency installs use the repository root `package.json` wrapper. Its `
 | `prd.json` | Evolving PRD chain with `finalSuccessCriteria`, active handoff, branch/PR naming, and planning metadata |
 | `prd.json.example` | Example evolving PRD format for reference |
 | `progress.txt` | Compact shared memory plus meaningful per-cycle notes for fresh agents |
-| `skills/ralph/` | Skill for setting up the initial evolving PRD chain (works with Amp, Claude Code, GitHub Copilot CLI, and ChatGPT Codex) |
+| `skills/ralph/` | Skill for setting up the initial evolving PRD chain |
+| `skills/ralph-run/` | Skill for running and monitoring the Ralph loop like a project manager |
 | `.claude-plugin/` | Plugin manifest for Claude Code marketplace discovery |
 | `flowchart/` | Interactive visualization of how Ralph works |
 

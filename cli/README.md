@@ -67,7 +67,7 @@ Options:
 
 ### `ralph install`
 
-Installs the Ralph setup skill (`/ralph`) into your AI tool's skills directory so it's available globally. If `/ralph` is already installed for the selected tool, Ralph removes the old skill folder first so stale files do not linger.
+Installs the bundled Ralph skills into your AI tool's skills directory so they're available globally. If a bundled skill is already installed for the selected tool, Ralph removes the old skill folder first so stale files do not linger.
 
 ```bash
 ralph install              # Claude Code (default)
@@ -78,6 +78,7 @@ ralph install --tool copilot
 
 After installing, you can use this skill in the selected AI tool:
 - `/ralph` — Expand the request and replace the template `prd.json` values with planner-routed feature context
+- `/ralph-run` — Start or monitor `ralph run` like a project manager, checking `prd.json`, `progress.txt`, git diffs, recent commits, and run output every 5 minutes
 
 ### `ralph bypass [on|off|status]`
 
